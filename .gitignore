@@ -1,0 +1,10 @@
+# data files
+*.csv
+*.txt
+
+*pipfile*
+*example*
+
+*pycache*
+._*
+.idea*
