@@ -1,6 +1,5 @@
 # data files
-*.csv
-*.txt
+data/
 
 *pipfile*
 *example*
@@ -8,3 +7,6 @@
 *pycache*
 ._*
 .idea*
+.tmp*
+config.r
+code_snippet_testing.py

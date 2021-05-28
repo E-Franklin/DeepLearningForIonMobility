@@ -1,13 +1,14 @@
+import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
 
 # Recurrent neural network (many-to-one)
-class RTLSTM(nn.Module):
+class RTLSTMOnehot(nn.Module):
     def __init__(self, input_size, num_lstm_units, num_layers, batch_size, vocab, device,
                  embed_dim=20, output_size=1):
-        super(RTLSTM, self).__init__()
+        super(RTLSTMOnehot, self).__init__()
         self.device = device
         self.vocab = vocab
         self.embed_dim = embed_dim
@@ -15,16 +16,12 @@ class RTLSTM(nn.Module):
         self.num_lstm_units = num_lstm_units
         self.num_layers = num_layers
 
-        # this embedding will make the vector all 0 for any padding character
-        self.word_embedding = nn.Embedding(num_embeddings=(len(self.vocab)), embedding_dim=self.embed_dim,
-                                           padding_idx=self.vocab['-'])
         self.lstm = nn.LSTM(input_size=input_size, hidden_size=num_lstm_units, num_layers=num_layers, batch_first=True)
-        self.fc = nn.Linear(num_lstm_units, output_size)
+        self.fc = nn.Linear(in_features=num_lstm_units, out_features=output_size)
 
     def forward(self, x, x_lengths):
         # x will have padded sequences
-
-        x = self.word_embedding(x)
+        x = self.onehot_encoding(x)
 
         # Dim transformation: (batch_size, seq_len, embedding_dim) -> (batch_size, seq_len, num_lstm_units)
         # pack_padded_sequence so that padded items in the sequence won't be shown to the LSTM
@@ -32,10 +29,15 @@ class RTLSTM(nn.Module):
 
         lstm_outs, (h_t, h_c) = self.lstm(x_packed)
 
-        # undo the packing operation
-        # lstm_outs, _ = torch.nn.utils.rnn.pad_packed_sequence(lstm_outs, batch_first=True)
-
         # Decode the hidden state of the last time step
         out = self.fc(F.relu(h_t[-1, :, :]))
-
         return out
+
+    def onehot_encoding(self, x):
+        # padding index assumed to be zero
+        encoding = []
+        # ident will be a matrix 21x20 with a diagonal of ones starting in the second row
+        ident = np.eye(self.embed_dim+1, self.embed_dim, k=-1, dtype=np.float32)
+        for seq in x:
+            encoding.append(ident[seq.cpu()])
+        return torch.tensor(encoding).to(self.device)
