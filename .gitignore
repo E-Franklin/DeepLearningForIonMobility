@@ -1,6 +1,12 @@
 # data files
 data/
 
+# plots. These are logged to wandb so they stay organized
+plots/
+
+# wandb run info
+wandb/
+
 *pipfile*
 *example*
 
@@ -8,5 +14,5 @@ data/
 ._*
 .idea*
 .tmp*
-config.r
+config*
 code_snippet_testing.py

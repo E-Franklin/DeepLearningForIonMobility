@@ -5,10 +5,9 @@ import torch.nn.functional as F
 
 # Recurrent neural network (many-to-one)
 class RTLSTM(nn.Module):
-    def __init__(self, input_size, num_lstm_units, num_layers, batch_size, vocab, device,
+    def __init__(self, input_size, num_lstm_units, num_layers, batch_size, vocab,
                  embed_dim=20, output_size=1):
         super(RTLSTM, self).__init__()
-        self.device = device
         self.vocab = vocab
         self.embed_dim = embed_dim
         self.batch_size = batch_size

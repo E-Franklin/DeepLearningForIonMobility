@@ -5,6 +5,7 @@ from sklearn.preprocessing import MinMaxScaler
 
 import DataUtils
 from Collate import pad_sort_collate
+from ConvNet import ConvNet
 from RTLSTM import RTLSTM
 from RTLSTMOnehot import *
 from SeqToIntTransform import *
@@ -28,7 +29,8 @@ wandb.init(project="LSTM Training",
                'batch_size': 4,
                'num_epochs': 4,
                'learning_rate': 0.01,
-               'datafile': 'data\\2021-03-12-easypqp-frac-lib-openswath_processed.tsv'
+               'data_file': #'data\\dia.txt'
+                   'data\\2021-03-12-easypqp-frac-lib-openswath_processed.tsv'
            })
 
 do_train = True
@@ -48,7 +50,9 @@ vocab = dict((a, i) for i, a in enumerate(aas))
 to_int = SeqToInt(vocab)
 
 target_name = 'RT'
-data_frame = pd.read_csv(wandb.config.datafile, sep='\t')[['sequence', target_name]]
+data_frame = pd.read_csv(wandb.config.data_file, sep='\t')[['sequence', target_name]]
+wandb.config.max_length = max([len(i) for i in data_frame['sequence']])
+
 if use_min:
     data_frame[target_name] = data_frame[target_name]/60
 
@@ -59,7 +63,7 @@ if scaled:
     scaler = MinMaxScaler(feature_range=(-1, 1))
     rt_data.scale_targets(scaler)
 
-DataUtils.plot_series(rt_data.get_targets(), 'RT distribution')
+# DataUtils.plot_series(rt_data.get_targets(), 'RT distribution')
 
 num_data_points = len(rt_data)
 
@@ -70,11 +74,16 @@ val_split = num_data_points - train_split - test_split
 train_dataset, test_dataset, valid_dataset = torch.utils.data.random_split(rt_data,
                                                                            [train_split, test_split, val_split],
                                                                            generator=torch.Generator().manual_seed(42))
-
+'''
 if use_onehot:
-    model = RTLSTMOnehot(wandb.config.input_size, wandb.config.num_lstm_units, wandb.config.num_layers, wandb.config.batch_size, vocab, device).to(device)
+    model = RTLSTMOnehot(wandb.config.input_size, wandb.config.num_lstm_units, wandb.config.num_layers, wandb.config.batch_size, vocab).to(device)
 else:
-    model = RTLSTM(wandb.config.input_size, wandb.config.num_lstm_units, wandb.config.num_layers, wandb.config.batch_size, vocab, device).to(device)
+    model = RTLSTM(wandb.config.input_size, wandb.config.num_lstm_units, wandb.config.num_layers, wandb.config.batch_size, vocab).to(device)
+'''
+kernel = 9
+model = ConvNet(kernel).to(device)
+#model = RTLSTM(wandb.config.input_size, wandb.config.num_lstm_units, wandb.config.num_layers, wandb.config.batch_size, vocab).to(device)
+
 
 train_loader, test_loader, val_loader = DataUtils.setup_data_loaders(train_dataset, test_dataset, valid_dataset,
                                                                      wandb.config.batch_size, pad_sort_collate)
@@ -133,18 +142,10 @@ if do_train:
                 unscaled_tar = scaler.inverse_transform(numpy_targets)
                 unscaled_sum_loss += mse(unscaled_out, unscaled_tar)
 
-            targets_list.extend(numpy_targets.squeeze().tolist())
-            preds_list.extend(numpy_outputs.squeeze().tolist())
-
             if (i + 1) % 100 == 0:
-                wandb.log({'loss': sum_loss / 100, 'unscaled_loss': unscaled_sum_loss / 100})
+                wandb.log({'epoch': epoch, 'loss': sum_loss / 100, 'unscaled_loss': unscaled_sum_loss / 100})
                 sum_loss = 0
                 unscaled_sum_loss = 0
-
-    # write the targets and predicted values to a file for later analysis.
-    df = pd.DataFrame({'Actual': targets_list, 'Pred': preds_list},
-                      columns=['Actual', 'Pred'])
-    df.to_csv(filename, index=False)
 
     torch.save(model.state_dict(), 'models/' + model_name + '.pt')
 

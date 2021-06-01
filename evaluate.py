@@ -2,6 +2,7 @@ import numpy as np
 import pandas as pd
 import torch
 from pathlib import Path
+import wandb
 
 
 def evaluate_model(model, model_name, scaled, scaler, device, batch_size, val_loader):
@@ -45,9 +46,13 @@ def evaluate_model(model, model_name, scaled, scaler, device, batch_size, val_lo
             targets_list.extend(targets.squeeze().tolist())
             preds_list.extend(outputs.squeeze().tolist())
 
-        # write the targets and predicted values to a file for later analysis.
-        df = pd.DataFrame({'Actual': targets_list, 'Pred': preds_list},
-                          columns=['Actual', 'Pred'])
-        df.to_csv(filename, index=False)
-        print('Average Loss: MAE {}, Med Abs Error {}'.format(sum_val_loss_abs / total, np.median(all_losses)))
-        Path('data/' + model_name + '_errors.txt').write_text(('Average Loss: MAE {}, Med Abs Error {}'.format(sum_val_loss_abs / total, np.median(all_losses))))
+    # write the targets and predicted values to a file for later analysis.
+    df = pd.DataFrame({'Actual': targets_list, 'Pred': preds_list},
+                      columns=['Actual', 'Pred'])
+    df.to_csv(filename, index=False)
+
+    table = wandb.Table(dataframe=df)
+
+    # Will need to generate the entire figure and then log it to wandb since you cannot plot multiple types of data in one plot
+    wandb.log({'actual_vs_pred': wandb.plot.scatter(table, x='Actual', y='Pred'), 'line_plot': wandb.plot.line(table, x='Actual', y='Actual', stroke='Pred')})
+    wandb.log({'Average Loss MAE': sum_val_loss_abs / total, 'Med Abs Error': np.median(all_losses)})
