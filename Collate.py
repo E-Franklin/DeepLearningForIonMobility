@@ -9,17 +9,17 @@ def pad_sort_collate(batch):
     :return: the padded batch and lengths of the sequences
     """
     # get the sequence and targets as lists
-    # TODO: find a better way to do this
     batch_seqs, batch_targets, lens = [s['sequence'] for s in batch], \
                                       [s['target'] for s in batch], \
                                       [s['length'] for s in batch]
 
     # pad the sequences
-    if wandb.config.max_length is None:
+    if wandb.config.pad_by == batch:
         # if a max_length for all sequences was not set then use the max length per batch
         max_length = max(lens)
     else:
         max_length = wandb.config.max_length
+
     padded_seqs = np.zeros((len(batch), max_length), dtype=int)
 
     for i, seq_length in enumerate(lens):

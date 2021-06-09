@@ -5,7 +5,7 @@ source("config.r")
 
 #TODO: make text bigger
 #TODO: change the colour of the 95th percentile lines so that they are distinct
-val_data <- read.table(paste0(data_dir, "LSTM_onehot_scaled_20210510-190056_validation_tar_pred.csv"), header=TRUE, sep=",")
+val_data <- read.table(paste0(data_dir, "LSTM_onehot_20210601-164558_validation_tar_pred.csv"), header=TRUE, sep=",")
 
 val_data$resid <- val_data$Actual - val_data$Pred
 
@@ -35,14 +35,14 @@ ggplot(val_data, aes(x=Actual, y=Pred)) +
   #geom_line(aes(y = Actual + bounds99CI["99.5%"]), size=0.5, colour = "black") +
   geom_line(aes(y = Actual), size=0.75, colour = "black") +
   geom_smooth(method = lm, se = FALSE, colour = "#1FCC00", size=0.75) +
-  ylim(0,120) +
-  xlim(0,120) +
-  xlab("Observed RT (sec)") +
-  ylab("Predicted RT (sec)") +
-  geom_text(x=80, y=10, label=paste("R^2:", r2, "\nInterval(sec):", interval*60, "\nInterval(min):", interval, sep=" "), size=4) +
+  #ylim(-5000,12000) +
+  #xlim(-5000,12000) +
+  xlab("Observed RT (min)") +
+  ylab("Predicted RT (min)") +
+  geom_text(x=75, y=20, label=paste("R^2:", r2, "\nInterval(min):", interval, "\nInterval(min):", interval, sep=" "), size=4) +
   theme_bw() +
   theme(plot.title = element_text(hjust = 0.5)) +
-  ggtitle("Actual vs Pred data. Validation Set. LSTM Onehot.")
+  ggtitle("Actual vs Pred data. CNN")
 
 
-ggsave(paste0(plot_dir, "LSTM_onehot_scaled_20210510-190056_validation_tar_pred.png"))
+ggsave(paste0(plot_dir, "LSTM_onehot_20210601-164558_validation_tar_pred.png"))

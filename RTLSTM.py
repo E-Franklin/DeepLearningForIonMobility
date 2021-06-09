@@ -2,22 +2,15 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-
 # Recurrent neural network (many-to-one)
 class RTLSTM(nn.Module):
-    def __init__(self, input_size, num_lstm_units, num_layers, batch_size, vocab,
-                 embed_dim=20, output_size=1):
+    def __init__(self, embedding_dim, num_lstm_units, num_layers, vocab, output_size=1):
         super(RTLSTM, self).__init__()
-        self.vocab = vocab
-        self.embed_dim = embed_dim
-        self.batch_size = batch_size
-        self.num_lstm_units = num_lstm_units
-        self.num_layers = num_layers
 
         # this embedding will make the vector all 0 for any padding character
-        self.word_embedding = nn.Embedding(num_embeddings=(len(self.vocab)), embedding_dim=self.embed_dim,
-                                           padding_idx=self.vocab['-'])
-        self.lstm = nn.LSTM(input_size=input_size, hidden_size=num_lstm_units, num_layers=num_layers, batch_first=True)
+        self.word_embedding = nn.Embedding(num_embeddings=(len(vocab)), embedding_dim=embedding_dim,
+                                           padding_idx=vocab['-'])
+        self.lstm = nn.LSTM(input_size=embedding_dim, hidden_size=num_lstm_units, num_layers=num_layers, batch_first=True)
         self.fc = nn.Linear(num_lstm_units, output_size)
 
     def forward(self, x, x_lengths):

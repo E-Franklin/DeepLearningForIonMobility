@@ -3,15 +3,16 @@ import pandas as pd
 import torch
 from pathlib import Path
 import wandb
+from DataUtils import load_validation_data
 
 
-def evaluate_model(model, model_name, scaled, scaler, device, batch_size, val_loader):
+def evaluate_model(model, model_name, collate_fn, scaler=None):
     print("Begin model eval")
     model.load_state_dict(torch.load('models/' + model_name + '.pt'))
 
     # create a file to store the targets and predictions for further analysis
     # The file name uses the model name. Raises an exception and does not train if the file already exists.
-    filename = 'data/' + model_name + '_validation_tar_pred.csv'
+    filename = 'output_data/' + model_name + '_validation_tar_pred.csv'
     exists = Path(filename).exists()
     if exists:
         raise RuntimeError('File ' + filename + ' already exists')
@@ -20,14 +21,16 @@ def evaluate_model(model, model_name, scaled, scaler, device, batch_size, val_lo
     targets_list = []
     preds_list = []
 
+    val_loader = load_validation_data(collate_fn)
+
     model.eval()
     with torch.no_grad():
         sum_val_loss_abs = 0
         total = 0
         all_losses = []
         for i, (seqs, targets, lengths) in enumerate(val_loader):
-            seqs = seqs.to(device).long()
-            targets = targets.view(batch_size, 1).to(device).float()
+            seqs = seqs.to(wandb.config.device).long()
+            targets = targets.view(wandb.config.batch_size, 1).to(wandb.config.device).float()
 
             # predict outputs
             outputs = model(seqs, lengths)
@@ -35,7 +38,7 @@ def evaluate_model(model, model_name, scaled, scaler, device, batch_size, val_lo
             targets = targets.data.cpu().numpy()
             outputs = outputs.data.cpu().numpy()
 
-            if scaled:
+            if scaler is not None:
                 targets = scaler.inverse_transform(targets)
                 outputs = scaler.inverse_transform(outputs)
 
@@ -53,6 +56,6 @@ def evaluate_model(model, model_name, scaled, scaler, device, batch_size, val_lo
 
     table = wandb.Table(dataframe=df)
 
-    # Will need to generate the entire figure and then log it to wandb since you cannot plot multiple types of data in one plot
+    # TODO: Will need to generate the entire figure and then log it to wandb since you cannot plot multiple types of data in one plot
     wandb.log({'actual_vs_pred': wandb.plot.scatter(table, x='Actual', y='Pred'), 'line_plot': wandb.plot.line(table, x='Actual', y='Actual', stroke='Pred')})
     wandb.log({'Average Loss MAE': sum_val_loss_abs / total, 'Med Abs Error': np.median(all_losses)})

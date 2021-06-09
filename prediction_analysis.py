@@ -1,7 +1,7 @@
 import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
-from config import data_dir
+from path_config import data_dir
 import numpy as np
 
 val_data = pd.read_csv(data_dir + 'LSTM_onehot_20210528-173243_validation_tar_pred.csv')

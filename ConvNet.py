@@ -1,5 +1,4 @@
-import numpy as np
-import torch
+
 import torch.nn as nn
 import torch.nn.functional as F
 from encoding import onehot_encoding
@@ -8,14 +7,14 @@ import wandb
 
 # CNN
 class ConvNet(nn.Module):
-    def __init__(self, conv1_kernel, embed_dim=20):
+    def __init__(self, conv1_kernel, embedding_dim=20):
         super(ConvNet, self).__init__()
 
-        self.embed_dim = embed_dim
+        self.embedding_dim = embedding_dim
 
         # following the structure of DeepRT but without the capsules since that is a custom layer and I would like to
         # compare to a vanilla conv net. DeepRT: https://github.com/horsepurve/DeepRTplus/blob/master/capsule_network_emb.py#L243
-        self.conv1 = nn.Conv2d(in_channels=1, out_channels=256, kernel_size=(embed_dim, conv1_kernel), stride=1)
+        self.conv1 = nn.Conv2d(in_channels=1, out_channels=256, kernel_size=(embedding_dim, conv1_kernel), stride=1)
         self.bn1 = nn.BatchNorm2d(256)
         self.conv2 = nn.Conv2d(in_channels=256, out_channels=256, kernel_size=(1, conv1_kernel), stride=1)
         self.bn2 = nn.BatchNorm2d(256)
@@ -24,11 +23,11 @@ class ConvNet(nn.Module):
         self.fc2 = nn.Linear(in_features=60, out_features=20)
         self.out = nn.Linear(in_features=20, out_features=1)
 
-    # lengths is taken in here because it comes from the batch collate function but it isn't used
+    # lengths is taken in here because it comes from the batch collate function but it isn't used.
+    # May write a new collate for convnet that doesn't return lengths and always pads to max dataset length
     def forward(self, x, x_lengths):
         # x will have padded sequences
-        # TODO: check how DeepRT handles padding
-        x = onehot_encoding(x, self.embed_dim)
+        x = onehot_encoding(x, self.embedding_dim)
         x = x.transpose(dim0=1, dim1=2)  # -> [batch, dict, len]
         x = x[:, None, :, :]  # -> [batch, 1, dict, len]
 
