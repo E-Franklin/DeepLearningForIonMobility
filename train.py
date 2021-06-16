@@ -5,8 +5,8 @@ import wandb
 from Collate import pad_sort_collate
 from ConvNet import ConvNet
 from DataUtils import load_training_data, get_vocab
-from RTLSTMOnehot import RTLSTMOnehot
-from evaluate import evaluate_model
+from LSTM_Models import LSTMOnehot
+from evaluate import evaluate_model_quick, evaluate_model
 
 
 def train():
@@ -19,12 +19,15 @@ def train():
     # Define the model
     model = None
     if config.model_type == 'LSTM':
-        model = RTLSTMOnehot(config.embedding_dim, config.num_lstm_units, config.num_layers,
-                             get_vocab()).to(config.device)
-    elif config.model_type == 'Convolution':
-        kernel = 9
-        model = ConvNet(kernel, embedding_dim=config.embedding_dim).to(config.device)
-
+        print('Building LSTM model')
+        model = LSTMOnehot(config.embedding_dim, config.num_lstm_units, config.num_layers,
+                           get_vocab(), config.bidirectional).to(config.device)
+    elif config.model_type == 'Conv':
+        print('Building convolutional model')
+        model = ConvNet(config.kernel, embedding_dim=config.embedding_dim).to(config.device)
+    else:
+        print('Unsupported model type')
+        return
     # Loss and optimizer
     loss_fn = nn.MSELoss()
     optimizer = torch.optim.Adam(model.parameters(), lr=config.learning_rate)
@@ -54,4 +57,7 @@ def train():
     torch.save(model.state_dict(), 'models/' + config.model_name + '.pt')
     print('Model saved.')
 
-    evaluate_model(model, config.model_name, collate_fn, scaler)
+    if config.plot_eval:
+        evaluate_model(model, config.model_name, collate_fn, config, scaler)
+    else:
+        evaluate_model_quick(model, collate_fn, config, scaler)

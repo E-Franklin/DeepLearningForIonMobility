@@ -1,4 +1,3 @@
-
 import torch.nn as nn
 import torch.nn.functional as F
 from encoding import onehot_encoding
@@ -43,5 +42,3 @@ class ConvNet(nn.Module):
         out = self.out(x)
 
         return out
-
-

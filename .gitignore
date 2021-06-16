@@ -16,4 +16,5 @@ wandb/
 .idea*
 .tmp*
 *config*
+*.pdf
 code_snippet_testing.py

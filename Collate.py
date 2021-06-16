@@ -14,10 +14,10 @@ def pad_sort_collate(batch):
                                       [s['length'] for s in batch]
 
     # pad the sequences
-    if wandb.config.pad_by == batch:
-        # if a max_length for all sequences was not set then use the max length per batch
+    if wandb.config.pad_by == 'batch':
         max_length = max(lens)
     else:
+        # use the max_length for the data set rather than the batch
         max_length = wandb.config.max_length
 
     padded_seqs = np.zeros((len(batch), max_length), dtype=int)

@@ -1,0 +1,20 @@
+program: sweep_lstm_train.py
+method: grid
+metric:
+  name: delta_t95
+  goal: minimize
+parameters:
+  learning_rate:
+    values: [0.005, 0.004]
+  batch_size:
+    value: 4
+  num_epochs:
+    value: 4
+  num_lstm_units:
+    values: [100, 300, 500, 700]
+  num_layers:
+    values: [3, 4, 5]
+command:
+  - C:\Users\spicy\.virtualenvs\DeepLearningForIonMobility-XwJxUx0e\Scripts\python.exe
+  - ${program}
+  - ${args}
