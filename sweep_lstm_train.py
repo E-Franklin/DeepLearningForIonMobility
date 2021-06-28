@@ -19,6 +19,7 @@ config_default = {
     # The name of the column containing the values to be predicted.
     'target': 'RT',
     'target_unit': 'min',
+    'use_charge': False,
     # The type of model you want to construct. Supports 'FC', 'LSTM', 'Conv'
     'model_type': 'LSTM',
     'model_name': '',

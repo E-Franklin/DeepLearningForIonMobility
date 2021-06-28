@@ -19,6 +19,7 @@ config = {
     # The name of the column containing the values to be predicted.
     'target': 'RT',
     'target_unit': 'min',
+    'use_charge': False,
     # The type of model you want to construct. Supports 'FC', 'LSTM', 'Conv'
     'model_type': 'LSTM',
     'model_name': '',
@@ -66,9 +67,9 @@ config['model_name'] = model_name
 
 config['model_type'] = 'LSTM'
 config['bidirectional'] = True
-config['learning_rate'] = 0.004
+config['learning_rate'] = 0.005
 config['num_layers'] = 3
-config['num_lstm_units'] = 300
+config['num_lstm_units'] = 100
 config['pad_by'] = 'batch'
 
 run = wandb.init(project="DeepLearningForIonMobility",
@@ -78,3 +79,10 @@ run = wandb.init(project="DeepLearningForIonMobility",
 train()
 
 run.finish()
+'''
+# Test with charge
+model_name = 'LSTM_RT_prediction_lab_data_' + datetime.now().strftime("%Y%m%d-%H%M%S")
+config['model_name'] = model_name
+
+config['use_charge'] = True
+'''

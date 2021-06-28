@@ -7,6 +7,7 @@ from ConvNet import ConvNet
 from DataUtils import load_training_data, get_vocab
 from LSTM_Models import LSTMOnehot
 from evaluate import evaluate_model_quick, evaluate_model
+from transformer import SequenceTransformer
 
 
 def train():
@@ -17,7 +18,6 @@ def train():
     train_loader, scaler = load_training_data(collate_fn)
 
     # Define the model
-    model = None
     if config.model_type == 'LSTM':
         print('Building LSTM model')
         model = LSTMOnehot(config.embedding_dim, config.num_lstm_units, config.num_layers,
@@ -25,6 +25,10 @@ def train():
     elif config.model_type == 'Conv':
         print('Building convolutional model')
         model = ConvNet(config.kernel, embedding_dim=config.embedding_dim).to(config.device)
+    elif config.model_type == 'Transformer':
+        print('Building Transformer model')
+        model = SequenceTransformer(get_vocab(), config.embedding_dim, config.num_attn_heads, config.dim_feed_fwd,
+                                    config.num_layers, config.dropout).to(config.device)
     else:
         print('Unsupported model type')
         return

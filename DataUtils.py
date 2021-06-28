@@ -50,11 +50,22 @@ def get_vocab():
     return vocab
 
 
+def load_file(filename):
+    data_frame = pd.read_csv(filename, sep='\t')[['sequence', wandb.config.target]]
+
+    if wandb.config.use_charge:
+        data_set = SequenceChargeDataset(data_frame, wandb.config.target, transform=SeqToInt(get_vocab()))
+    else:
+        data_set = SequenceDataset(data_frame, wandb.config.target, transform=SeqToInt(get_vocab()))
+
+    return data_set
+
+
 def load_training_data(collate_fn):
     file = data_dir + wandb.config.data_set + '_train.tsv'
-    data_frame = pd.read_csv(file, sep='\t')[['sequence', wandb.config.target]]
-    wandb.config.max_length = max([len(i) for i in data_frame['sequence']])
-    data_set = SequenceDataset(data_frame, wandb.config.target, transform=SeqToInt(get_vocab()))
+    data_set = load_file(file)
+    wandb.config.max_length = data_set.get_max_length()
+
     scaler = MinMaxScaler(feature_range=(0, 1))
     data_set.scale_targets(scaler)
 
@@ -70,8 +81,7 @@ def load_training_data(collate_fn):
 
 def load_testing_data(collate_fn, scaler):
     file = data_dir + wandb.config.data_set + '_test.tsv'
-    data_frame = pd.read_csv(file, sep='\t')[['sequence', wandb.config.target]]
-    data_set = SequenceDataset(data_frame, wandb.config.target, transform=SeqToInt(get_vocab()))
+    data_set = load_file(file)
     data_set.scale_targets(scaler)
 
     test_loader = torch.utils.data.DataLoader(dataset=data_set,
@@ -84,9 +94,7 @@ def load_testing_data(collate_fn, scaler):
 
 def load_validation_data(collate_fn, scaler):
     file = data_dir + wandb.config.data_set + '_val.tsv'
-    data_frame = pd.read_csv(file, sep='\t')[['sequence', wandb.config.target]]
-
-    data_set = SequenceDataset(data_frame, wandb.config.target, transform=SeqToInt(get_vocab()))
+    data_set = load_file(file)
     data_set.scale_targets(scaler)
 
     val_loader = torch.utils.data.DataLoader(dataset=data_set,

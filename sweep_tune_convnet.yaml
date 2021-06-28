@@ -11,7 +11,11 @@ parameters:
   num_epochs:
     value: 4
   kernel:
-    values: [6, 7, 8, 9, 10, 11]
+    values: [7, 8, 9, 10, 11]
+  target:
+    value: 'IM'
+  target_unit:
+    value: '1/K0'
 command:
   - C:\Users\spicy\.virtualenvs\DeepLearningForIonMobility-XwJxUx0e\Scripts\python.exe
   - ${program}

@@ -1,19 +1,23 @@
-program: sweep_lstm_train.py
+program: sweep_transformer_train.py
 method: grid
 metric:
   name: delta_t95
   goal: minimize
 parameters:
   learning_rate:
-    values: [0.01, 0.005, 0.001]
+    values: [0.01, 0.01, 0.005, 0.001]
   batch_size:
     value: 4
   num_epochs:
     value: 4
-  num_lstm_units:
-    values: [100, 300, 500, 700]
+  num_attn_heads:
+    value: 2
   num_layers:
-    values: [2, 3, 4, 5]
+    values: [2, 3, 4]
+  dropout:
+    values: [0, 0.2]
+  dim_feed_fwd:
+    values: [200, 400]
   target:
     value: 'IM'
   target_unit:

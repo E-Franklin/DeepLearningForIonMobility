@@ -18,3 +18,4 @@ wandb/
 *config*
 *.pdf
 code_snippet_testing.py
+*.pt
