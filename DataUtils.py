@@ -1,3 +1,5 @@
+from statistics import median
+
 import numpy as np
 import seaborn as sns
 import plotly
@@ -20,6 +22,10 @@ def delta_t95(act, pred):
 
 def delta_tr95(act, pred):
     return delta_t95(act, pred) / (max(act) - min(act))
+
+
+def med_rel_error(act, pred):
+    return median(abs(act - pred)/act) * 100
 
 
 def plot_series(data, title=''):
@@ -51,10 +57,10 @@ def get_vocab():
 
 
 def load_file(filename):
-    data_frame = pd.read_csv(filename, sep='\t')[['sequence', wandb.config.target]]
+    data_frame = pd.read_csv(filename, sep='\t')[['sequence', 'charge', wandb.config.target]]
 
     if wandb.config.use_charge:
-        data_set = SequenceChargeDataset(data_frame, wandb.config.target, transform=SeqToInt(get_vocab()))
+        data_set = SequenceChargeDataset(data_frame, wandb.config.target, transform=ChargeSeqToInt(get_vocab()))
     else:
         data_set = SequenceDataset(data_frame, wandb.config.target, transform=SeqToInt(get_vocab()))
 

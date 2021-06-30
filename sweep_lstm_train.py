@@ -17,8 +17,8 @@ config_default = {
     'num_epochs': 4,
     'learning_rate': 0.01,
     # The name of the column containing the values to be predicted.
-    'target': 'RT',
-    'target_unit': 'min',
+    'target': 'IM',
+    'target_unit': '1/K0',
     'use_charge': False,
     # The type of model you want to construct. Supports 'FC', 'LSTM', 'Conv'
     'model_type': 'LSTM',
@@ -35,14 +35,14 @@ config_default = {
     'data_dir': 'data_sets\\',
     # this is the file name for the dataset. Suffixes will automatically be added to load the proper data file.
     'data_set':  # 'dia',
-                'lab_data',
-                # 'deep_learning_ccs',
+                #'lab_data',
+                'deep_learning_ccs',
                 # 'deep_learning_ccs_nomod',
     'plot_eval': False
 }
 
 # initialize wandb run
-model_name = 'LSTM_RT_prediction_lab_data_' + datetime.now().strftime("%Y%m%d-%H%M%S")
+model_name = 'LSTM_' + config_default['target'] + '_prediction_lab_data_' + datetime.now().strftime("%Y%m%d-%H%M%S")
 config_default['model_name'] = model_name
 wandb.init(config=config_default)
 train()

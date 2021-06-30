@@ -6,8 +6,11 @@ from torch.nn import TransformerEncoder, TransformerEncoderLayer
 
 
 class SequenceTransformer(nn.Module):
-    def __init__(self, vocab, embed_size, nhead, dim_ff, num_layers, dropout=0.5):
+    def __init__(self, vocab, embed_size, nhead, dim_ff, num_layers, use_charge, dropout=0.2):
         super(SequenceTransformer, self).__init__()
+
+        self.use_charge = use_charge
+
         self.encoder = nn.Embedding(num_embeddings=(len(vocab)), embedding_dim=embed_size,
                                     padding_idx=vocab['-'])
         self.pos_encoder = PositionalEncoding(embed_size, dropout)
@@ -15,7 +18,13 @@ class SequenceTransformer(nn.Module):
                                                  dropout=dropout, batch_first=True)
         self.transformer_encoder = TransformerEncoder(encoder_layers, num_layers)
         self.d_model = embed_size
-        self.decoder = nn.Linear(embed_size, 1)
+
+        if use_charge:
+            self.decoder1 = nn.Linear(embed_size + 1, 60)
+        else:
+            self.decoder1 = nn.Linear(embed_size, 60)
+
+        self.decoder2 = nn.Linear(60, 1)
 
         self.init_weights()
 
@@ -27,15 +36,25 @@ class SequenceTransformer(nn.Module):
     def init_weights(self):
         initrange = 0.1
         self.encoder.weight.data.uniform_(-initrange, initrange)
-        self.decoder.bias.data.zero_()
-        self.decoder.weight.data.uniform_(-initrange, initrange)
+        self.decoder1.bias.data.zero_()
+        self.decoder1.weight.data.uniform_(-initrange, initrange)
+        self.decoder2.bias.data.zero_()
+        self.decoder2.weight.data.uniform_(-initrange, initrange)
 
-    def forward(self, src, src_mask):
-        src = self.encoder(src) * math.sqrt(self.d_model)
-        src = self.pos_encoder(src)
-        t_output = self.transformer_encoder(src, src_mask)
+    def forward(self, seq, charges, src_mask):
+        seq = self.encoder(seq) * math.sqrt(self.d_model)
+        seq = self.pos_encoder(seq)
+
+        # t_output = self.transformer_encoder(seq)
+        t_output = self.transformer_encoder(seq, src_mask)
+
         t_output = torch.sum(t_output, dim=1)
-        output = self.decoder(t_output)
+        if self.use_charge:
+            t_output = torch.cat([t_output, charges], dim=1)
+
+        output = self.decoder1(t_output)
+        output = self.decoder2(output)
+
         return output
 
 

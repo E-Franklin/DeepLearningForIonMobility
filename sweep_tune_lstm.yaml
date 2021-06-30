@@ -7,17 +7,19 @@ parameters:
   learning_rate:
     values: [0.01, 0.005, 0.001]
   batch_size:
-    value: 4
+    value: 10
   num_epochs:
     value: 4
   num_lstm_units:
-    values: [100, 300, 500, 700]
+    values: [100, 500]
   num_layers:
-    values: [2, 3, 4, 5]
+    values: [2, 3, 4]
+  use_charge:
+    values: [True, False]
   target:
     value: 'IM'
   target_unit:
-    value: '1/K0'
+    value: 'A'
   plot_eval:
     value: True
 command:
