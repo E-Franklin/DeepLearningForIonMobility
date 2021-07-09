@@ -3,10 +3,10 @@ from datetime import datetime
 import torch
 
 import wandb
+from train import train
+
 
 # Check if CUDA is available on the system and use it if so.
-from train_transformer import train_transformer
-
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 # initialize the wandb config. These are the defaults for the sweep. Some will be overwritten by the sweep.
@@ -48,4 +48,4 @@ model_name = 'Transformer_RT_prediction_lab_data_' + datetime.now().strftime("%Y
 config_default['model_name'] = model_name
 wandb.init(config=config_default)
 
-train_transformer()
+train()

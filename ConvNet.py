@@ -20,16 +20,14 @@ class ConvNet(nn.Module):
         self.bn1 = nn.BatchNorm2d(256)
         self.conv2 = nn.Conv2d(in_channels=256, out_channels=256, kernel_size=(1, conv1_kernel), stride=1)
         self.bn2 = nn.BatchNorm2d(256)
-        self.out_size = (wandb.config.max_length - 2*conv1_kernel) + 2
+        self.out_size = (wandb.config.max_length - 2 * conv1_kernel) + 2
 
-        self.fc = nn.Linear(in_features=256*1*self.out_size, out_features=60)
-        self.fc_charge = nn.Linear(in_features=256*1*self.out_size + 1, out_features=60)
+        self.fc = nn.Linear(in_features=256 * 1 * self.out_size, out_features=60)
+        self.fc_charge = nn.Linear(in_features=256 * 1 * self.out_size + 1, out_features=60)
         self.fc2 = nn.Linear(in_features=60, out_features=20)
         self.out = nn.Linear(in_features=20, out_features=1)
 
-    # lengths is taken in here because it comes from the batch collate function but it isn't used.
-    # May write a new collate for convnet that doesn't return lengths and always pads to max dataset length
-    def forward(self, x, charges, x_lengths):
+    def forward(self, x, charges):
         # x will have padded sequences
         x = onehot_encoding(x, self.embedding_dim)
         x = x.transpose(dim0=1, dim1=2)  # -> [batch, dict, len]
@@ -40,7 +38,7 @@ class ConvNet(nn.Module):
         x = F.relu(self.bn2(self.conv2(x)), inplace=True)
 
         # flatten the output from the CNN
-        x = x.view(-1, 256*1*self.out_size)
+        x = x.view(-1, 256 * 1 * self.out_size)
 
         if self.use_charge:
             x = torch.cat([x, charges], dim=1)

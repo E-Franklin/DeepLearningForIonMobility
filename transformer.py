@@ -41,12 +41,12 @@ class SequenceTransformer(nn.Module):
         self.decoder2.bias.data.zero_()
         self.decoder2.weight.data.uniform_(-initrange, initrange)
 
-    def forward(self, seq, charges, src_mask):
+    def forward(self, seq, charges):
         seq = self.encoder(seq) * math.sqrt(self.d_model)
         seq = self.pos_encoder(seq)
 
-        # t_output = self.transformer_encoder(seq)
-        t_output = self.transformer_encoder(seq, src_mask)
+        t_output = self.transformer_encoder(seq)
+        # t_output = self.transformer_encoder(seq, src_mask)
 
         t_output = torch.sum(t_output, dim=1)
         if self.use_charge:

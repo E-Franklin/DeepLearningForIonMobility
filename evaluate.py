@@ -29,7 +29,10 @@ def evaluate(model, config, collate_fn, scaler):
             charges = charges.to(config.device)
 
             # predict outputs
-            outputs = model(seqs, charges, lengths)
+            if config.model_type == 'LSTM':
+                outputs = model(seqs, charges, lengths)
+            else:
+                outputs = model(seqs, charges)
 
             targets = targets.data.cpu().numpy()
             outputs = outputs.data.cpu().numpy()
@@ -83,7 +86,7 @@ def evaluate_model(model, model_name, collate_fn, config, scaler=None, load_mode
     df['colour'] = ['outlier' if abs(resid) > delta_95 else 'point' for resid in residuals]
 
     fig = px.scatter(df, x='Actual', y='Pred', color='colour', template='ggplot2',
-                     title=f'Actual vs Predicted model: {model_name}',
+                     title=f'Actual vs Predicted for model {model_name}',
                      labels={
                          'Actual': f'Actual {config["target"]} ({config["target_unit"]})',
                          'Pred': f'Predicted {config["target"]} ({config["target_unit"]})'

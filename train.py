@@ -39,6 +39,7 @@ def train():
 
     sum_loss = 0
 
+    print('Begin training...')
     for epoch in range(config.num_epochs):
         for i, (seqs, charges, targets, lengths) in enumerate(train_loader):
             seqs = seqs.to(config.device).long()
@@ -46,7 +47,11 @@ def train():
             charges = charges.to(config.device)
 
             # Forward pass
-            outputs = model(seqs, charges, lengths)
+            if config.model_type == 'LSTM':
+                outputs = model(seqs, charges, lengths)
+            else:
+                outputs = model(seqs, charges)
+
             loss = loss_fn(outputs, targets)
 
             # Backward and optimize
@@ -60,11 +65,13 @@ def train():
                 wandb.log({'epoch': epoch, 'loss': sum_loss / 100})
                 sum_loss = 0
 
+        print(f'End of epoch {epoch}')
+        if epoch == config.num_epochs-1:
+            evaluate_model(model, config.model_name, collate_fn, config, scaler)
+        else:
+            evaluate_model_quick(model, collate_fn, config, scaler)
+
     print('Training complete. Saving model ' + config.model_name)
     torch.save(model.state_dict(), 'models/' + config.model_name + '.pt')
     print('Model saved.')
 
-    if config.plot_eval:
-        evaluate_model(model, config.model_name, collate_fn, config, scaler)
-    else:
-        evaluate_model_quick(model, collate_fn, config, scaler)

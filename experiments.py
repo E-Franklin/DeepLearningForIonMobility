@@ -5,9 +5,8 @@ import torch
 import wandb
 from train import train
 
-# Check if CUDA is available on the system and use it if so.
-from train_transformer import train_transformer
 
+# Check if CUDA is available on the system and use it if so.
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 # initialize the wandb config. The config can be updated before each run
@@ -16,7 +15,7 @@ config = {
     'embedding_dim': 22,
     'output_size': 1,
     'batch_size': 4,
-    'num_epochs': 4,
+    'num_epochs': 25,
     'learning_rate': 0.01,
     # The name of the column containing the values to be predicted.
     'target': 'RT',
@@ -38,15 +37,14 @@ config = {
     'pad_by': 'batch',
     'data_dir': 'data_sets\\',
     # this is the file name for the dataset. Suffixes will automatically be added to load the proper data file.
-    'data_set':  # 'dia',
-                'lab_data',
-                # 'deep_learning_ccs',
+    'data_set':  # 'dia'
+                'lab_data'
+                # 'deep_learning_ccs'
+                # 'deep_learning_ccs_sample'
                 # 'deep_learning_ccs_nomod',
-
-    'plot_eval': True
 }
 
-'''
+
 # -------- EXP 1 : LSTM RT Prediction on Lab data -----------
 
 model_name = 'LSTM_RT_prediction_lab_data_' + datetime.now().strftime("%Y%m%d-%H%M%S")
@@ -340,7 +338,7 @@ train()
 run.finish()
 '''
 
-
+'''
 # -------- EXP 13 : Transformer RT Prediction on Lab data -----------
 model_name = 'Transformer_RT_pred_lab_data_' + datetime.now().strftime("%Y%m%d-%H%M%S")
 config['model_name'] = model_name
@@ -362,7 +360,7 @@ run = wandb.init(project="DeepLearningForIonMobility",
                  name=config['model_name'],
                  config=config,
                  reinit=True)
-train_transformer()
+train()
 
 run.finish()
 
@@ -388,7 +386,7 @@ run = wandb.init(project="DeepLearningForIonMobility",
                  name=config['model_name'],
                  config=config,
                  reinit=True)
-train_transformer()
+train()
 
 run.finish()
 
@@ -415,7 +413,7 @@ run = wandb.init(project="DeepLearningForIonMobility",
                  name=config['model_name'],
                  config=config,
                  reinit=True)
-train_transformer()
+train()
 
 run.finish()
 
@@ -441,7 +439,7 @@ run = wandb.init(project="DeepLearningForIonMobility",
                  name=config['model_name'],
                  config=config,
                  reinit=True)
-train_transformer()
+train()
 
 run.finish()
 
@@ -467,7 +465,7 @@ run = wandb.init(project="DeepLearningForIonMobility",
                  name=config['model_name'],
                  config=config,
                  reinit=True)
-train_transformer()
+train()
 
 run.finish()
 
@@ -493,6 +491,61 @@ run = wandb.init(project="DeepLearningForIonMobility",
                  name=config['model_name'],
                  config=config,
                  reinit=True)
-train_transformer()
+train()
 
 run.finish()
+
+
+'''
+# -------- EXP 19 : Transformer IM Prediction on Deep Learning CCS Data Without Charge -----------
+
+model_name = 'Transformer_IM_pred_ccs_small_data_nc_' + datetime.now().strftime("%Y%m%d-%H%M%S")
+config['model_name'] = model_name
+
+config['model_type'] = 'Transformer'
+config['num_attn_heads'] = 2
+config['num_layers'] = 2
+config['dim_feed_fwd'] = 200
+config['dropout'] = 0
+config['data_set'] = 'deep_learning_ccs_sample'
+config['batch_size'] = 4
+config['target'] = 'IM'
+config['target_unit'] = 'A'
+config['use_charge'] = False
+config['learning_rate'] = 0.001
+config['pad_by'] = 'batch'
+
+run = wandb.init(project="DeepLearningForIonMobility",
+                 name=config['model_name'],
+                 config=config,
+                 reinit=True)
+train()
+
+run.finish()
+
+# -------- EXP 20 : Transformer IM Prediction on Deep Learning CCS Data With Charge -----------
+
+model_name = 'Transformer_IM_pred_ccs_small_data_wc_' + datetime.now().strftime("%Y%m%d-%H%M%S")
+config['model_name'] = model_name
+
+config['model_type'] = 'Transformer'
+config['num_attn_heads'] = 2
+config['num_layers'] = 2
+config['dim_feed_fwd'] = 200
+config['dropout'] = 0
+config['data_set'] = 'deep_learning_ccs_sample'
+config['batch_size'] = 4
+config['target'] = 'IM'
+config['target_unit'] = 'A'
+config['use_charge'] = True
+config['learning_rate'] = 0.001
+config['pad_by'] = 'batch'
+
+run = wandb.init(project="DeepLearningForIonMobility",
+                 name=config['model_name'],
+                 config=config,
+                 reinit=True)
+train()
+
+run.finish()
+'''
