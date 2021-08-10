@@ -3,7 +3,7 @@ from datetime import datetime
 import torch
 
 import wandb
-from train import train
+from train import train_model
 
 # Check if CUDA is available on the system and use it if so.
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
@@ -43,4 +43,4 @@ config_default = {
 model_name = 'Conv_RT_prediction_lab_data_' + datetime.now().strftime("%Y%m%d-%H%M%S")
 config_default['model_name'] = model_name
 wandb.init(config=config_default)
-train()
+train_model()

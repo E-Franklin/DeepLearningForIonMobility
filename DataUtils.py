@@ -1,17 +1,13 @@
 from statistics import median
 
 import numpy as np
-import seaborn as sns
-import plotly
-import plotly.express as px
-import matplotlib.pyplot as plt
 import pandas as pd
 import torch
-import wandb
-from SequenceDataset import *
-from SeqToIntTransform import *
 from sklearn.preprocessing import MinMaxScaler
 
+import wandb
+from SeqToIntTransform import *
+from SequenceDataset import *
 from path_config import data_dir
 
 
@@ -28,19 +24,10 @@ def med_rel_error(act, pred):
     return median(abs(act - pred)/act) * 100
 
 
-def plot_series(data, title=''):
-    sns.displot(data, kind='kde')
-    plt.subplots_adjust(top=.90)
-    plt.title(title, y=1.04)
-    plt.savefig('plots/' + title + '.png')
-    # wandb.log({'title': plt})
-    plt.show()
-
-
 def get_stats(data):
     if type(data) is list:
         data = pd.Series(data)
-    plot_series(data)
+    # plot_series(data)
     mean = data.mean()
     stdev = data.std()
     print(f'Mean: {mean:.3f} stdev: {stdev:.3f}')
@@ -49,7 +36,7 @@ def get_stats(data):
 def get_vocab():
     # define the possible characters in the sequence, - is used for padding. a is acetylation and m is methionine oxidation.
     # This will be the same for all datasets as they will be preprocessed. The size of this list affects the encoding.
-    aas = '-ACDEFGHIKLMNPQRSTVWYam'
+    aas = '-ACDEFGHIKLMNPQRSTVWYamc'
 
     # define the mappings for char to int and int to char
     vocab = dict((a, i) for i, a in enumerate(aas))
@@ -57,11 +44,12 @@ def get_vocab():
 
 
 def load_file(filename):
-    data_frame = pd.read_csv(filename, sep='\t')[['sequence', 'charge', wandb.config.target]]
 
     if wandb.config.use_charge:
+        data_frame = pd.read_csv(filename, sep='\t')[['sequence', 'charge', wandb.config.target]]
         data_set = SequenceChargeDataset(data_frame, wandb.config.target, transform=ChargeSeqToInt(get_vocab()))
     else:
+        data_frame = pd.read_csv(filename, sep='\t')[['sequence', wandb.config.target]]
         data_set = SequenceDataset(data_frame, wandb.config.target, transform=SeqToInt(get_vocab()))
 
     return data_set
@@ -75,8 +63,6 @@ def load_training_data(collate_fn):
     scaler = MinMaxScaler(feature_range=(0, 1))
     data_set.scale_targets(scaler)
 
-    # plot_series(data_set.get_targets(), wandb.config.target + ' distribution')
-
     train_loader = torch.utils.data.DataLoader(dataset=data_set,
                                                batch_size=wandb.config.batch_size,
                                                collate_fn=collate_fn,
@@ -89,6 +75,8 @@ def load_testing_data(collate_fn, scaler):
     file = data_dir + wandb.config.data_set + '_test.tsv'
     data_set = load_file(file)
     data_set.scale_targets(scaler)
+    if wandb.config.max_length < data_set.get_max_length():
+        wandb.config.update({'max_length': data_set.get_max_length()}, allow_val_change=True)
 
     test_loader = torch.utils.data.DataLoader(dataset=data_set,
                                               batch_size=wandb.config.batch_size,
@@ -102,6 +90,8 @@ def load_validation_data(collate_fn, scaler):
     file = data_dir + wandb.config.data_set + '_val.tsv'
     data_set = load_file(file)
     data_set.scale_targets(scaler)
+    if wandb.config.max_length < data_set.get_max_length():
+        wandb.config.update({'max_length': data_set.get_max_length()}, allow_val_change=True)
 
     val_loader = torch.utils.data.DataLoader(dataset=data_set,
                                              batch_size=wandb.config.batch_size,
