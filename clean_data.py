@@ -2,7 +2,7 @@ import pandas as pd
 import re
 
 data_set_lengths = {}
-
+'''
 # --------------------------------------------------------------------------------------------------------------
 # Lab Data
 
@@ -80,7 +80,7 @@ im_pred_set_nc.reset_index(inplace=True, drop=True)
 # write to a file to be split later
 im_pred_set_nc.to_csv('data_sets\\lab_data_im_nc.tsv', sep='\t', index=False)
 data_set_lengths['lab_data_im_nc'] = len(im_pred_set_nc)
-
+'''
 # ----------------------------------------------------------------------------
 # Deep Learning CCS data
 
@@ -95,7 +95,7 @@ print(len(data_deep_ccs))
 
 '''
 # remove the _ from the start and end of each modified sequence
-data['sequence'] = data['sequence'].str.replace('_', '')
+
 # Take the rows where the modified and unmodified sequences match
 data_no_mods = data[data['sequence'] == data['base sequence']]
 data_no_mods.to_csv('data_sets\\CCS_prediction_SourceData_Figure1_no_modified_peptides.tsv', sep='\t', index=False)
@@ -110,8 +110,9 @@ unique_mods = set(mod_patterns)
 print(unique_mods)
 
 # Replace the markers for acetylation and methionine oxidation with the single character markers that will be used in encoding
-data_deep_ccs['sequence'] = data_deep_ccs['sequence'].str.replace(r'_\(ac\)', 'a', regex=True)
+data_deep_ccs['sequence'] = data_deep_ccs['sequence'].str.replace(r'\(ac\)', 'a', regex=True)
 data_deep_ccs['sequence'] = data_deep_ccs['sequence'].str.replace(r'M\(ox\)', 'm', regex=True)
+data_deep_ccs['sequence'] = data_deep_ccs['sequence'].str.replace('_', '')
 
 data_deep_ccs = data_deep_ccs.sort_values('Score', ascending=False)
 

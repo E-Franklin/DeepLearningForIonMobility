@@ -6,7 +6,7 @@ from torch.nn import TransformerEncoder, TransformerEncoderLayer
 
 
 class SequenceTransformer(nn.Module):
-    def __init__(self, vocab, embed_size, nhead, dim_ff, num_layers, use_charge, dropout=0.2):
+    def __init__(self, vocab, embed_size, nhead, dim_ff, num_layers, use_charge, dropout=0):
         super(SequenceTransformer, self).__init__()
 
         self.use_charge = use_charge

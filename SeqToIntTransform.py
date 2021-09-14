@@ -30,7 +30,7 @@ class ChargeSeqToInt:
 
     def __call__(self, sample):
 
-        seq = [self.vocab[char] for char in sample['sequence']]
+        seq = [self.vocab[char + str(sample['charge'])] for char in sample['sequence']]
         sample['sequence'] = seq
 
         return sample

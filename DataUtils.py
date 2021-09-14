@@ -21,7 +21,17 @@ def delta_tr95(act, pred):
 
 
 def med_rel_error(act, pred):
-    return median(abs(act - pred)/act) * 100
+    return median(abs(act - pred) / act) * 100
+
+
+def delta_t90(act, pred):
+    num90 = int(np.ceil(len(act) * 0.90))
+    return 2 * sorted(abs(act - pred))[num90 - 1]
+
+
+def delta_t90_err(act, pred):
+    err = abs(act - pred) / act
+    return delta_t90(err, 0)
 
 
 def get_stats(data):
@@ -36,15 +46,27 @@ def get_stats(data):
 def get_vocab():
     # define the possible characters in the sequence, - is used for padding. a is acetylation and m is methionine oxidation.
     # This will be the same for all datasets as they will be preprocessed. The size of this list affects the encoding.
-    aas = '-ACDEFGHIKLMNPQRSTVWYamc'
+    aas = 'ACDEFGHIKLMNPQRSTVWYamc'
+    aa_charge = ['-']
 
-    # define the mappings for char to int and int to char
-    vocab = dict((a, i) for i, a in enumerate(aas))
+    if wandb.config.use_charge:
+        # for every character encoding of amino acids that we have defined, apend the charge and add it to the list.
+        # charges range from 1 to 5
+        # TODO: build the vocabulary from the data
+        for a in aas:
+            for i in range(1, 6):
+                if a + str(i) not in aa_charge:
+                    aa_charge.append(a + str(i))
+        vocab = dict((a, i) for i, a in enumerate(aa_charge))
+    else:
+        # define the mappings for char to int and int to char
+        vocab = dict((a, i) for i, a in enumerate(aas))
+
+    wandb.config.embedding_dim = len(vocab)
     return vocab
 
 
 def load_file(filename):
-
     if wandb.config.use_charge:
         data_frame = pd.read_csv(filename, sep='\t')[['sequence', 'charge', wandb.config.target]]
         data_set = SequenceChargeDataset(data_frame, wandb.config.target, transform=ChargeSeqToInt(get_vocab()))
@@ -74,6 +96,7 @@ def load_training_data(collate_fn):
 def load_testing_data(collate_fn, scaler):
     file = data_dir + wandb.config.data_set + '_test.tsv'
     data_set = load_file(file)
+    print(data_set.get_max_length())
     data_set.scale_targets(scaler)
     if wandb.config.max_length < data_set.get_max_length():
         wandb.config.update({'max_length': data_set.get_max_length()}, allow_val_change=True)
@@ -89,6 +112,7 @@ def load_testing_data(collate_fn, scaler):
 def load_validation_data(collate_fn, scaler):
     file = data_dir + wandb.config.data_set + '_val.tsv'
     data_set = load_file(file)
+    print(data_set.get_max_length())
     data_set.scale_targets(scaler)
     if wandb.config.max_length < data_set.get_max_length():
         wandb.config.update({'max_length': data_set.get_max_length()}, allow_val_change=True)

@@ -6,7 +6,7 @@ from pathlib import Path
 from scipy.stats import stats
 
 import wandb
-from DataUtils import delta_t95, delta_tr95, med_rel_error
+from DataUtils import delta_t95, delta_tr95, med_rel_error, delta_t90_err
 import plotly.express as px
 import plotly.graph_objects as go
 
@@ -49,28 +49,19 @@ def evaluate(model, config, data_loader, scaler):
     return targets_list, preds_list
 
 
-def evaluate_model(model, model_name, data_loader, config, data_set, scaler=None, load_model=False, plot_eval=False):
-    """
-    This evaluate method runs the evaluation loop and saves the targets and prediction as well as plotting the
-    Actual vs Predicted values and adding the delta_t95 lines
-    """
-    print("Begin model eval")
-
-    if load_model:
-        model.load_state_dict(torch.load('models/' + model_name + '.pt'))
-
-    targets_list, preds_list = evaluate(model, config, data_loader, scaler)
+def run_and_log_stats(targets_list, preds_list, data_set, plot_eval, model_name, config):
     df = pd.DataFrame({'Actual': targets_list, 'Pred': preds_list},
                       columns=['Actual', 'Pred'])
 
-    # Get the delta_t95 and build the plot
     delta_95 = delta_t95(df['Actual'], df['Pred'])
     delta_tr_95 = delta_tr95(df['Actual'], df['Pred'])
     med_error = med_rel_error(df['Actual'], df['Pred'])
+    delt90_err = delta_t90_err(df['Actual'], df['Pred'])
     pearson_coef, p_value = stats.pearsonr(df['Actual'], df['Pred'])
 
     wandb.log({f'{data_set}_delta_t95': delta_95, f'{data_set}_delta_tr95': delta_tr_95,
                f'{data_set}_med_rel_error %': med_error,
+               f'{data_set}_delta_t90_rel_error %': delt90_err,
                f'{data_set}_pearson_coef': pearson_coef, f'{data_set}_p-value': p_value})
 
     if plot_eval:
@@ -116,3 +107,19 @@ def evaluate_model(model, model_name, data_loader, config, data_set, scaler=None
 
     print(f'{data_set} Evaluation complete. Delta_t95: {delta_95}, Med Rel Err: {med_error}')
     return med_error
+
+
+def evaluate_model(model, model_name, data_loader, config, data_set, scaler=None, load_model=False, plot_eval=False):
+    """
+    This evaluate method runs the evaluation loop and saves the targets and prediction as well as plotting the
+    Actual vs Predicted values and adding the delta_t95 lines
+    """
+    print("Begin model eval")
+
+    if load_model:
+        model.load_state_dict(torch.load('models/' + model_name + '.pt'))
+
+    targets_list, preds_list = evaluate(model, config, data_loader, scaler)
+    med_err = run_and_log_stats(targets_list, preds_list, data_set, plot_eval, model_name, config)
+
+    return med_err

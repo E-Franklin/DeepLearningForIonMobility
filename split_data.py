@@ -9,7 +9,7 @@ import pandas as pd
 import re
 
 
-def split_data(path, fracs=None, subsample=False, sample_size=None):
+def split_data(path, fracs=None, subsample=False, sample_size=None, use_base=True):
     data_frame = pd.read_csv(path, sep='\t')
     # shuffle the input
     data_frame = data_frame.sample(frac=1, random_state=1)
@@ -18,12 +18,28 @@ def split_data(path, fracs=None, subsample=False, sample_size=None):
 
     # set the fractions for the train, test, validate split
     if fracs is None:
-        fracs = [0.7, 0.2, 0.1]
+        fracs = [0.7, 0.15, 0.15]
 
     fractions = np.array(fracs)
 
-    # split into 3 parts
-    train, test, val = np.array_split(data_frame, (fractions[:-1].cumsum() * len(data_frame)).astype(int))
+    if use_base:
+        # take the base sequence
+        base = data_frame['base_sequence']
+        print(len(base))
+        # filter to only the unique base sequences
+        base = base.drop_duplicates()
+        print(len(base))
+        # split the sequences into train, test, and validate sets
+        train_a, test_a, val_a = np.array_split(base, (fractions[:-1].cumsum() * len(base)).astype(int))
+        # join the base sequences back to the original data
+        train = data_frame.merge(train_a, how='right', on='base_sequence')
+        test = data_frame.merge(test_a, how='right', on='base_sequence')
+        val = data_frame.merge(val_a, how='right', on='base_sequence')
+    else:
+        # split into 3 parts
+        train, test, val = np.array_split(data_frame, (fractions[:-1].cumsum() * len(data_frame)).astype(int))
+
+    print(f'train: {len(train)}, test:{len(test)}, val:{len(val)}')
 
     # remove the file extension from the input data path
     output = re.sub(r'\..*', '', path)
