@@ -1,28 +1,20 @@
 program: sweep_lstm_train.py
 method: grid
 metric:
-  name: delta_t95
+  name: final_validation_med_rel_error %
   goal: minimize
 parameters:
   learning_rate:
-    values: [0.01, 0.005, 0.001]
-  batch_size:
-    value: 10
-  num_epochs:
-    value: 4
+    values: [0.01, 0.001, 0.0001]
+  dropout:
+    values: [0, 0.1]
   num_lstm_units:
-    values: [100, 500]
+    values: [64, 100, 128, 256, 512]
   num_layers:
     values: [2, 3, 4]
-  use_charge:
+  bidirectional:
     values: [True, False]
-  target:
-    value: 'IM'
-  target_unit:
-    value: 'A'
-  plot_eval:
-    value: True
 command:
-  - C:\Users\spicy\.virtualenvs\DeepLearningForIonMobility-XwJxUx0e\Scripts\python.exe
+  - C:\Users\spicy\.virtualenvs\DeepLearningForIonMobility\Scripts\python.exe
   - ${program}
   - ${args}

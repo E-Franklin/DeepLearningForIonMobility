@@ -60,6 +60,7 @@ def get_vocab():
         vocab = dict((a, i) for i, a in enumerate(aa_charge))
     else:
         # define the mappings for char to int and int to char
+        aas += aa_charge[0]
         vocab = dict((a, i) for i, a in enumerate(aas))
 
     wandb.config.embedding_dim = len(vocab)
@@ -68,11 +69,15 @@ def get_vocab():
 
 def load_file(filename):
     if wandb.config.use_charge:
-        data_frame = pd.read_csv(filename, sep='\t')[['sequence', 'charge', wandb.config.target]]
-        data_set = SequenceChargeDataset(data_frame, wandb.config.target, transform=ChargeSeqToInt(get_vocab()))
+        data_frame = pd.read_csv(filename, sep='\t')[
+            ['sequence', 'charge', wandb.config.target]]
+        data_set = SequenceChargeDataset(data_frame, wandb.config.target,
+                                         transform=ChargeSeqToInt(get_vocab()))
     else:
-        data_frame = pd.read_csv(filename, sep='\t')[['sequence', wandb.config.target]]
-        data_set = SequenceDataset(data_frame, wandb.config.target, transform=SeqToInt(get_vocab()))
+        data_frame = pd.read_csv(filename, sep='\t')[
+            ['sequence', wandb.config.target]]
+        data_set = SequenceDataset(data_frame, wandb.config.target,
+                                   transform=SeqToInt(get_vocab()))
 
     return data_set
 
@@ -99,7 +104,8 @@ def load_testing_data(collate_fn, scaler):
     print(data_set.get_max_length())
     data_set.scale_targets(scaler)
     if wandb.config.max_length < data_set.get_max_length():
-        wandb.config.update({'max_length': data_set.get_max_length()}, allow_val_change=True)
+        wandb.config.update({'max_length': data_set.get_max_length()},
+                            allow_val_change=True)
 
     test_loader = torch.utils.data.DataLoader(dataset=data_set,
                                               batch_size=wandb.config.batch_size,
@@ -115,7 +121,8 @@ def load_validation_data(collate_fn, scaler):
     print(data_set.get_max_length())
     data_set.scale_targets(scaler)
     if wandb.config.max_length < data_set.get_max_length():
-        wandb.config.update({'max_length': data_set.get_max_length()}, allow_val_change=True)
+        wandb.config.update({'max_length': data_set.get_max_length()},
+                            allow_val_change=True)
 
     val_loader = torch.utils.data.DataLoader(dataset=data_set,
                                              batch_size=wandb.config.batch_size,

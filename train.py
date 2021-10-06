@@ -40,7 +40,7 @@ def train_model():
         else:
             plat_scheduler.step(med_error)
 
-    evaluate_model(model, config.model_name, val_loader, config, 'validation', scaler, plot_eval=True)
+    evaluate_model(model, config.model_name, val_loader, config, 'final_validation', scaler, plot_eval=True)
     print('Training complete. Saving model ' + config.model_name)
     torch.save(model.state_dict(), 'models/' + config.model_name + '.pt')
     print('Model saved.')

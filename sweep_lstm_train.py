@@ -9,40 +9,28 @@ from train import train_model
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 # initialize the wandb config. These are the defaults for the sweep. Some will be overwritten by the sweep.
-config_default = {
+default_config = {
     'device': device,
-    'embedding_dim': 22,
+    # 'embedding_dim': 120,
     'output_size': 1,
-    'batch_size': 4,
-    'num_epochs': 4,
-    'learning_rate': 0.01,
-    # The name of the column containing the values to be predicted.
-    'target': 'IM',
-    'target_unit': '1/K0',
-    'use_charge': False,
-    # The type of model you want to construct. Supports 'FC', 'LSTM', 'Conv'
-    'model_type': 'LSTM',
-    'model_name': '',
-    # depending on the model type, further parameters need to be set
-    # LSTM
-    'num_lstm_units': 60,
-    'num_layers': 2,
-    'bidirectional': True,
-    # pad_by specifies whether to pad all sequences in a data set to a max_length. This is the
-    # default when not set. The max_length will be determined and set in the load_data function.
-    # To pad each batch to its own max length set pad_by to batch.
-    'pad_by': 'batch',
+    # The value used by Meier et al is 64 and by DeepRT is 16
+    'batch_size': 16,
+    'num_epochs': 20,
+    'learning_rate': 0.001,
+    'dropout': 0,
     'data_dir': 'data_sets\\',
-    # this is the file name for the dataset. Suffixes will automatically be added to load the proper data file.
-    'data_set':  # 'dia',
-                #'lab_data',
-                'deep_learning_ccs',
-                # 'deep_learning_ccs_nomod',
-    'plot_eval': False
+    'data_set': 'lab_data_rt',
+    # 'data_set': 'deep_learning_ccs_rt'
+    'model_type': 'LSTM',
+    'target': 'RT',
+    'target_unit': 'min',
+    'use_charge': False,
+    'pad_by': 'batch'
 }
 
 # initialize wandb run
-model_name = 'LSTM_' + config_default['target'] + '_prediction_lab_data_' + datetime.now().strftime("%Y%m%d-%H%M%S")
-config_default['model_name'] = model_name
-wandb.init(config=config_default)
+model_name = f"LSTM_{default_config['target']}_{default_config['data_set']}_" \
+                     f"{datetime.now().strftime('%Y%m%d-%H%M')}"
+default_config['model_name'] = model_name
+wandb.init(config=default_config)
 train_model()
