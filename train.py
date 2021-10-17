@@ -3,7 +3,7 @@ from torch import nn
 from torch.optim.lr_scheduler import StepLR, ReduceLROnPlateau
 
 import wandb
-from Collate import pad_sort_collate
+from Collate import pad_sort_collate, collate
 from ConvNet import ConvNet
 from DataUtils import load_training_data, get_vocab, load_validation_data
 from LSTM_Models import LSTMOnehot
@@ -15,7 +15,10 @@ def train_model():
     config = wandb.config
 
     # load the training data
-    collate_fn = pad_sort_collate
+    if wandb.config.pad_by == 'none':
+        collate_fn = collate
+    else:
+        collate_fn = pad_sort_collate
     train_loader, scaler = load_training_data(collate_fn)
     val_loader = load_validation_data(collate_fn, scaler)
 
@@ -39,6 +42,11 @@ def train_model():
             s1_scheduler.step()
         else:
             plat_scheduler.step(med_error)
+        if epoch % 2 == 0:
+            print(f'Saving model {config.model_name} at epoch {epoch}')
+            torch.save(model.state_dict(),
+                       f'models/{config.model_name}_{epoch}.pt')
+            print('Model saved.')
 
     evaluate_model(model, config.model_name, val_loader, config, 'final_validation', scaler, plot_eval=True)
     print('Training complete. Saving model ' + config.model_name)
@@ -70,7 +78,7 @@ def train(model, config, train_loader, loss_fn, optimizer, epoch):
     model.train()
     sum_loss = 0
     for i, (seqs, charges, targets, lengths) in enumerate(train_loader):
-        seqs = seqs.to(config.device).long()
+        #seqs = seqs.to(config.device).long()
         targets = targets.view(config.batch_size, 1).to(config.device).float()
         charges = charges.to(config.device)
 

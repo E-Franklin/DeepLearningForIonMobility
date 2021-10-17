@@ -22,7 +22,7 @@ def evaluate(model, config, data_loader, scaler):
         total = 0
         all_losses = []
         for i, (seqs, charges, targets, lengths) in enumerate(data_loader):
-            seqs = seqs.to(config.device).long()
+            #seqs = seqs.to(config.device).long()
             targets = targets.view(config.batch_size, 1).to(config.device).float()
             charges = charges.to(config.device)
 

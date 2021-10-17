@@ -14,7 +14,7 @@ default_config = {
     # 'embedding_dim': 120,
     'output_size': 1,
     # The value used by Meier et al is 64 and by DeepRT is 16
-    'batch_size': 16,
+    'batch_size': 64,
     'num_epochs': 20,
     'learning_rate': 0.001,
     'dropout': 0,
@@ -177,7 +177,7 @@ config_17 = {'data_set': 'deep_learning_ccs_im_wc', 'model_type': 'Conv',
 config_18 = {'data_set': 'deep_learning_ccs_im_wc', 'model_type': 'Transformer',
              'target': 'IM', 'target_unit': 'A',
              'use_charge': True, 'num_attn_heads': 2, 'num_layers': 2,
-             'dim_feed_fwd': 200, 'pad_by': 'batch'}
+             'dim_feed_fwd': 200, 'embedding_dim': 512, 'pad_by': 'none'}
 
 # TODO: Make runs with deepRT data
 '''
@@ -242,7 +242,7 @@ config_24 = {'data_set': 'lab_data_im_wc_ccs', 'model_type': 'Transformer',
 
 # config_1, config_2, config_3, config_4, config_5, config_6, config_7, config_8, config_9, config_10, config_11, config_12,
 #                              config_13, config_14, config_15, config_16, config_17, config_18
-run_configs = run_configs + [config_23, config_24]  # config_19, config_20, config_21, config_22,
+run_configs = run_configs + [config_18]  # config_19, config_20, config_21, config_22, config_23, config_24
 
 replicate = 3
 for conf in run_configs:

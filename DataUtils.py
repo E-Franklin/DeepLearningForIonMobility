@@ -1,3 +1,4 @@
+import re
 from statistics import median
 
 import numpy as np
@@ -9,6 +10,8 @@ import wandb
 from SeqToIntTransform import *
 from SequenceDataset import *
 from path_config import data_dir
+
+
 
 
 def delta_t95(act, pred):
@@ -63,7 +66,7 @@ def get_vocab():
         aas += aa_charge[0]
         vocab = dict((a, i) for i, a in enumerate(aas))
 
-    wandb.config.embedding_dim = len(vocab)
+    # wandb.config.embedding_dim = len(vocab)
     return vocab
 
 
@@ -71,8 +74,8 @@ def load_file(filename):
     if wandb.config.use_charge:
         data_frame = pd.read_csv(filename, sep='\t')[
             ['sequence', 'charge', wandb.config.target]]
-        data_set = SequenceChargeDataset(data_frame, wandb.config.target,
-                                         transform=ChargeSeqToInt(get_vocab()))
+        data_set = SequenceChargeDataset(data_frame, wandb.config.target)
+                                        # transform=ChargeSeqToInt(get_vocab()))
     else:
         data_frame = pd.read_csv(filename, sep='\t')[
             ['sequence', wandb.config.target]]
