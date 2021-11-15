@@ -59,13 +59,12 @@ class SequenceTransformer(nn.Module):
     def forward(self, seq, charges):
         # seq = self.encoder(seq) * math.sqrt(self.d_model)
 
-        z = []
-        for s in seq:
-            # $z$ is the output of the CPCProt encoder
-            z.append(self.embedder.get_z(s))  # (1, L // 11, 512)
+        # z is the output of the CPCProt encoder
+        z = [self.embedder.get_z(s) for s in seq]
 
         z = torch.stack(z)
-        # remove the extra dim from the CPCProt embedder
+        # remove the extra dim from the CPCProt embedder (it is the batch dim
+        # from the embedder but the actual batch size is added in torch.stack)
         z = torch.squeeze(z, dim=1)
         seq = self.pos_encoder(z)
 

@@ -15,11 +15,12 @@ default_config = {
     'output_size': 1,
     # The value used by Meier et al is 64 and by DeepRT is 16
     'batch_size': 64,
-    'num_epochs': 20,
+    'num_epochs': 15,
     'learning_rate': 0.001,
     'dropout': 0,
     'data_dir': 'data_sets\\'
 }
+
 
 '''
     # The name of the column containing the values to be predicted.
@@ -143,7 +144,7 @@ config_11 = {'data_set': 'lab_data_im_wc', 'model_type': 'Conv', 'target': 'IM',
 config_12 = {'data_set': 'lab_data_im_wc', 'model_type': 'Transformer',
              'target': 'IM', 'target_unit': '1/K0',
              'use_charge': True, 'num_attn_heads': 2, 'num_layers': 2,
-             'dim_feed_fwd': 200, 'pad_by': 'batch'}
+             'dim_feed_fwd': 200, 'embedding_dim': 512, 'pad_by': 'none'}
 
 # -------- EXP 13 : LSTM IM Prediction on Deep Learning CCS Data Without Charge -----------
 config_13 = {'data_set': 'deep_learning_ccs_im_nc', 'model_type': 'LSTM',
@@ -166,12 +167,12 @@ config_15 = {'data_set': 'deep_learning_ccs_im_nc', 'model_type': 'Transformer',
 config_16 = {'data_set': 'deep_learning_ccs_im_wc', 'model_type': 'LSTM',
              'target': 'IM', 'target_unit': 'A',
              'use_charge': True, 'bidirectional': True, 'num_layers': 3,
-             'num_lstm_units': 128, 'pad_by': 'batch'}
+             'num_lstm_units': 128, 'embedding_dim': 512, 'pad_by': 'none'}
 
 # -------- EXP 17 : Convolution IM Prediction on Deep Learning CCS Data With Charge -----------
 config_17 = {'data_set': 'deep_learning_ccs_im_wc', 'model_type': 'Conv',
              'target': 'IM', 'target_unit': 'A',
-             'use_charge': True, 'kernel': 10, 'pad_by': ''}
+             'use_charge': True, 'kernel': 10, 'embedding_dim': 512, 'pad_by': ''}
 
 # -------- EXP 18 : Transformer IM Prediction on Deep Learning CCS Data With Charge -----------
 config_18 = {'data_set': 'deep_learning_ccs_im_wc', 'model_type': 'Transformer',
@@ -242,9 +243,9 @@ config_24 = {'data_set': 'lab_data_im_wc_ccs', 'model_type': 'Transformer',
 
 # config_1, config_2, config_3, config_4, config_5, config_6, config_7, config_8, config_9, config_10, config_11, config_12,
 #                              config_13, config_14, config_15, config_16, config_17, config_18
-run_configs = run_configs + [config_18]  # config_19, config_20, config_21, config_22, config_23, config_24
+run_configs = run_configs + [config_16]  # config_17, config_18 config_19, config_20, config_21, config_22, config_23, config_24
 
-replicate = 3
+replicate = 1
 for conf in run_configs:
     for i in range(replicate):
         model_name = f"{conf['model_type']}_{conf['target']}_{conf['data_set']}_" \
@@ -257,6 +258,7 @@ for conf in run_configs:
         run = wandb.init(project="DeepLearningForIonMobility",
                          name=model_name,
                          config=config,
+                         dir=output_dir,
                          reinit=True)
         train_model()
 

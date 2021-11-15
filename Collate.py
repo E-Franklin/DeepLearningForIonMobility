@@ -80,13 +80,15 @@ def collate(batch):
     max_len = max(lens)
     for seq in batch_seqs:
         seq_length = len(seq)
-        seq = seq.upper()  # this will treat the modified amino acids as unmodified
+        # seq.upper() this will treat the modified amino acids as unmodified and is a
+        # quirk of how I am representing modifications
+        seq = seq.upper()
         encode = tokenizer.encode(seq)
         padded_seq = np.zeros((max_len,), dtype=int)
 
         padded_seq[0:seq_length] = encode[0:seq_length]
 
-        final_seqs.append(torch.tensor([padded_seq]))
+        final_seqs.append(torch.tensor(np.array([padded_seq])))
 
     batch_charges = torch.tensor(batch_charges)
     batch_charges = batch_charges[:, None]

@@ -41,7 +41,7 @@ def k0_to_ccs(df: DataFrame):
 
 
 data_set_lengths = {}
-
+'''
 # --------------------------------------------------------------------------------------------------------------
 # Lab Data
 
@@ -84,7 +84,7 @@ lab_data['sequence'] = lab_data['sequence'].str.replace(r'C\(UniMod:4\)', 'c',
                                                         regex=True)
 lab_data['sequence'] = lab_data['sequence'].str.replace(r'M\(UniMod:35\)', 'm',
                                                         regex=True)
-'''
+
 # ---------------------------------------
 # Prepare the data set for RT prediction
 # ---------------------------------------
@@ -109,7 +109,7 @@ deep_rt_lab_set.reset_index(inplace=True, drop=True)
 # write to a file to be split later
 deep_rt_lab_set.to_csv('data_sets\\lab_data_deeprt.tsv', sep='\t', index=False)
 data_set_lengths['lab_data_deeprt'] = len(deep_rt_lab_set)
-'''
+
 # ------------------------------------
 # Prepare the data for IM prediction
 # ------------------------------------
@@ -136,7 +136,7 @@ im_pred_set_nc.reset_index(inplace=True, drop=True)
 im_pred_set_nc.to_csv('data_sets\\lab_data_im_nc_ccs.tsv', sep='\t',
                       index=False)
 data_set_lengths['lab_data_im_nc'] = len(im_pred_set_nc)
-'''
+
 # ----------------------------------------------------------------------------
 # Deep Learning CCS data
 
@@ -208,4 +208,5 @@ data_set_lengths['deep_learning_ccs_im_nc'] = len(data_deep_ccs_im_nc)
 with open('data_sets\\data_set_lengths.txt', 'w') as f:
     print(data_set_lengths, file=f)
 '''
+
 print("Done processing data")

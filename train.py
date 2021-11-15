@@ -42,11 +42,13 @@ def train_model():
             s1_scheduler.step()
         else:
             plat_scheduler.step(med_error)
+        '''
         if epoch % 2 == 0:
             print(f'Saving model {config.model_name} at epoch {epoch}')
             torch.save(model.state_dict(),
                        f'models/{config.model_name}_{epoch}.pt')
             print('Model saved.')
+        '''
 
     evaluate_model(model, config.model_name, val_loader, config, 'final_validation', scaler, plot_eval=True)
     print('Training complete. Saving model ' + config.model_name)

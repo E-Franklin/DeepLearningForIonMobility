@@ -9,7 +9,6 @@ from sklearn.preprocessing import MinMaxScaler
 import wandb
 from SeqToIntTransform import *
 from SequenceDataset import *
-from path_config import data_dir
 
 
 
@@ -86,7 +85,7 @@ def load_file(filename):
 
 
 def load_training_data(collate_fn):
-    file = data_dir + wandb.config.data_set + '_train.tsv'
+    file = wandb.config.data_dir + wandb.config.data_set + '_train.tsv'
     data_set = load_file(file)
     wandb.config.max_length = data_set.get_max_length()
 
@@ -102,7 +101,7 @@ def load_training_data(collate_fn):
 
 
 def load_testing_data(collate_fn, scaler):
-    file = data_dir + wandb.config.data_set + '_test.tsv'
+    file = wandb.config.data_dir + wandb.config.data_set + '_test.tsv'
     data_set = load_file(file)
     print(data_set.get_max_length())
     data_set.scale_targets(scaler)
@@ -119,7 +118,7 @@ def load_testing_data(collate_fn, scaler):
 
 
 def load_validation_data(collate_fn, scaler):
-    file = data_dir + wandb.config.data_set + '_val.tsv'
+    file = wandb.config.data_dir + wandb.config.data_set + '_val.tsv'
     data_set = load_file(file)
     print(data_set.get_max_length())
     data_set.scale_targets(scaler)
