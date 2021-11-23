@@ -12,6 +12,11 @@ from path_config import data_dir
 
 
 def delta_t95(act, pred):
+    """
+    :param act: array containing the actual data values
+    :param pred: array containing the predicted data values
+    :return: the width of the interval containing 95% of the residual values
+    """
     num95 = int(np.ceil(len(act) * 0.95))
     return 2 * sorted(abs(act - pred))[num95 - 1]
 
@@ -30,7 +35,12 @@ def delta_t90(act, pred):
 
 
 def delta_t90_err(act, pred):
-    err = abs(act - pred) / act
+    """
+    :param act: array containing the actual data values
+    :param pred: array containing the predicted data values
+    :return: The width of the window containing 90% of the relative % error values
+    """
+    err = (abs(act - pred) / act) * 100
     return delta_t90(err, 0)
 
 
@@ -44,14 +54,16 @@ def get_stats(data):
 
 
 def get_vocab():
-    # define the possible characters in the sequence, - is used for padding. a is acetylation and m is methionine oxidation.
-    # This will be the same for all datasets as they will be preprocessed. The size of this list affects the encoding.
+    # define the possible characters in the sequence, - is used for padding. a
+    # is acetylation and m is methionine oxidation. This will be the same for
+    # all datasets as they will be preprocessed. The size of this list affects
+    # the encoding.
     aas = 'ACDEFGHIKLMNPQRSTVWYamc'
     aa_charge = ['-']
 
     if wandb.config.use_charge:
-        # for every character encoding of amino acids that we have defined, apend the charge and add it to the list.
-        # charges range from 1 to 5
+        # for every character encoding of amino acids that we have defined,
+        # append the charge and add it to the list. charges range from 1 to 5
         # TODO: build the vocabulary from the data
         for a in aas:
             for i in range(1, 6):
@@ -83,7 +95,7 @@ def load_file(filename):
 
 
 def load_training_data(collate_fn):
-    file = data_dir + wandb.config.data_set + '_train.tsv'
+    file = wandb.config.training_data
     data_set = load_file(file)
     wandb.config.max_length = data_set.get_max_length()
 
@@ -98,8 +110,8 @@ def load_training_data(collate_fn):
     return train_loader, scaler
 
 
-def load_testing_data(collate_fn, scaler):
-    file = data_dir + wandb.config.data_set + '_test.tsv'
+def load_test_data(collate_fn, scaler):
+    file = wandb.config.testing_data
     data_set = load_file(file)
     print(data_set.get_max_length())
     data_set.scale_targets(scaler)
@@ -113,20 +125,3 @@ def load_testing_data(collate_fn, scaler):
                                               shuffle=False,
                                               drop_last=True)
     return test_loader
-
-
-def load_validation_data(collate_fn, scaler):
-    file = data_dir + wandb.config.data_set + '_val.tsv'
-    data_set = load_file(file)
-    print(data_set.get_max_length())
-    data_set.scale_targets(scaler)
-    if wandb.config.max_length < data_set.get_max_length():
-        wandb.config.update({'max_length': data_set.get_max_length()},
-                            allow_val_change=True)
-
-    val_loader = torch.utils.data.DataLoader(dataset=data_set,
-                                             batch_size=wandb.config.batch_size,
-                                             collate_fn=collate_fn,
-                                             shuffle=False,
-                                             drop_last=True)
-    return val_loader

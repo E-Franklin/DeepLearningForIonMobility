@@ -1,14 +1,14 @@
-import numpy as np
-import pandas as pd
-import torch
 from pathlib import Path
 
+import numpy as np
+import pandas as pd
+import plotly.express as px
+import plotly.graph_objects as go
+import torch
 from scipy.stats import stats
 
 import wandb
 from DataUtils import delta_t95, delta_tr95, med_rel_error, delta_t90_err
-import plotly.express as px
-import plotly.graph_objects as go
 
 
 def evaluate(model, config, data_loader, scaler):
@@ -23,7 +23,8 @@ def evaluate(model, config, data_loader, scaler):
         all_losses = []
         for i, (seqs, charges, targets, lengths) in enumerate(data_loader):
             seqs = seqs.to(config.device).long()
-            targets = targets.view(config.batch_size, 1).to(config.device).float()
+            targets = targets.view(config.batch_size, 1).to(
+                config.device).float()
             charges = charges.to(config.device)
 
             # predict outputs
@@ -49,7 +50,8 @@ def evaluate(model, config, data_loader, scaler):
     return targets_list, preds_list
 
 
-def run_and_log_stats(targets_list, preds_list, data_set, plot_eval, model_name, config):
+def run_and_log_stats(targets_list, preds_list, data_set, plot_eval, model_name,
+                      config):
     df = pd.DataFrame({'Actual': targets_list, 'Pred': preds_list},
                       columns=['Actual', 'Pred'])
 
@@ -59,15 +61,18 @@ def run_and_log_stats(targets_list, preds_list, data_set, plot_eval, model_name,
     delt90_err = delta_t90_err(df['Actual'], df['Pred'])
     pearson_coef, p_value = stats.pearsonr(df['Actual'], df['Pred'])
 
-    wandb.log({f'{data_set}_delta_t95': delta_95, f'{data_set}_delta_tr95': delta_tr_95,
+    wandb.log({f'{data_set}_delta_t95': delta_95,
+               f'{data_set}_delta_tr95': delta_tr_95,
                f'{data_set}_med_rel_error %': med_error,
                f'{data_set}_delta_t90_rel_error %': delt90_err,
-               f'{data_set}_pearson_coef': pearson_coef, f'{data_set}_p-value': p_value})
+               f'{data_set}_pearson_coef': pearson_coef,
+               f'{data_set}_p-value': p_value})
 
     if plot_eval:
 
         # create a file to store the targets and predictions
-        filename = 'output_data/' + model_name + '_validation_tar_pred.csv'
+        filename = wandb.config.output_folder + 'output_data/' + model_name + \
+                         '_validation_tar_pred.csv'
         exists = Path(filename).exists()
         if exists:
             raise RuntimeError('File ' + filename + ' already exists')
@@ -75,13 +80,17 @@ def run_and_log_stats(targets_list, preds_list, data_set, plot_eval, model_name,
         df.to_csv(filename, index=False)
 
         residuals = df['Actual'] - df['Pred']
-        df['colour'] = ['outlier' if abs(resid) > delta_95 else 'point' for resid in residuals]
+        df['colour'] = ['outlier' if abs(resid) > delta_95 else 'point' for
+                        resid in residuals]
 
-        fig = px.scatter(df, x='Actual', y='Pred', color='colour', template='ggplot2',
+        fig = px.scatter(df, x='Actual', y='Pred', color='colour',
+                         template='ggplot2',
                          title=f'Actual vs Predicted for model {model_name}',
                          labels={
-                             'Actual': f'Actual {config["target"]} ({config["target_unit"]})',
-                             'Pred': f'Predicted {config["target"]} ({config["target_unit"]})'
+                             'Actual': f'Actual {config["target"]} '
+                                       f'({config["target_unit"]})',
+                             'Pred': f'Predicted {config["target"]} '
+                                     f'({config["target_unit"]})'
                          })
         fig.add_trace(
             go.Scatter(
@@ -105,13 +114,17 @@ def run_and_log_stats(targets_list, preds_list, data_set, plot_eval, model_name,
 
         wandb.log({'Act vs Pred plot': fig})
 
-    print(f'{data_set} Evaluation complete. Delta_t95: {delta_95}, Med Rel Err: {med_error}')
+    print(
+        f'{data_set} Evaluation complete. Delta_t95: {delta_95}, Med Rel Err:'
+        f' {med_error}')
     return med_error
 
 
-def evaluate_model(model, model_name, data_loader, config, data_set, scaler=None, load_model=False, plot_eval=False):
+def evaluate_model(model, model_name, data_loader, config, data_set,
+                   scaler=None, load_model=False, plot_eval=False):
     """
-    This evaluate method runs the evaluation loop and saves the targets and prediction as well as plotting the
+    This evaluate method runs the evaluation loop and saves the targets and
+    prediction as well as plotting the
     Actual vs Predicted values and adding the delta_t95 lines
     """
     print("Begin model eval")
@@ -120,6 +133,7 @@ def evaluate_model(model, model_name, data_loader, config, data_set, scaler=None
         model.load_state_dict(torch.load('models/' + model_name + '.pt'))
 
     targets_list, preds_list = evaluate(model, config, data_loader, scaler)
-    med_err = run_and_log_stats(targets_list, preds_list, data_set, plot_eval, model_name, config)
+    med_err = run_and_log_stats(targets_list, preds_list, data_set, plot_eval,
+                                model_name, config)
 
     return med_err

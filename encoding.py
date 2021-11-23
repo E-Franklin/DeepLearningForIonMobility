@@ -11,4 +11,6 @@ def onehot_encoding(x, embedding_dim):
     ident = np.eye(embedding_dim + 1, embedding_dim, k=-1, dtype=np.float32)
     for seq in x:
         encoding.append(ident[seq.cpu()])
-    return torch.tensor(encoding).to(wandb.config.device)
+    # convert list to numpy.ndarray before converting to tensor for better
+    # performance. You will get a UserWarning about this without np.array
+    return torch.tensor(np.array(encoding)).to(wandb.config.device)

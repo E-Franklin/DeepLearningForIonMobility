@@ -39,6 +39,9 @@ def k0_to_ccs(df: DataFrame):
 
     return ccs_values
 
+def ccs_to_k0(df: Dataframe):
+
+
 
 data_set_lengths = {}
 
