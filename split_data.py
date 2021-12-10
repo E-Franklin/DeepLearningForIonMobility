@@ -51,7 +51,7 @@ def split_data(path, fracs=None, subsample=False, sample_size=None, use_base=Tru
 
 
 # TODO: additional error checking
-# TODO: use flags
+# TODO: use argparse
 # allow data file to be specified from command line
 if len(sys.argv) == 2:
     data_path = sys.argv[1]

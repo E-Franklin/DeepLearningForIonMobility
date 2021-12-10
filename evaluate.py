@@ -71,8 +71,8 @@ def run_and_log_stats(targets_list, preds_list, data_set, plot_eval, model_name,
     if plot_eval:
 
         # create a file to store the targets and predictions
-        filename = wandb.config.output_folder + 'output_data/' + model_name + \
-                         '_validation_tar_pred.csv'
+        filename = f'{wandb.config.output_dir}output_data/' \
+                   f'{model_name}_validation_tar_pred.csv'
         exists = Path(filename).exists()
         if exists:
             raise RuntimeError('File ' + filename + ' already exists')
@@ -130,7 +130,7 @@ def evaluate_model(model, model_name, data_loader, config, data_set,
     print("Begin model eval")
 
     if load_model:
-        model.load_state_dict(torch.load('models/' + model_name + '.pt'))
+        model.load_state_dict(torch.load(wandb.config.model))
 
     targets_list, preds_list = evaluate(model, config, data_loader, scaler)
     med_err = run_and_log_stats(targets_list, preds_list, data_set, plot_eval,

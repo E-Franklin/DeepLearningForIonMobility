@@ -46,7 +46,8 @@ def train_model():
     evaluate_model(model, config.model_name, val_loader, config,
                    'final_validation', scaler, plot_eval=True)
     print('Training complete. Saving model ' + config.model_name)
-    torch.save(model.state_dict(), 'models/' + config.model_name + '.pt')
+    torch.save(model.state_dict(), f'{wandb.config.output_dir}/models'
+                                   f'/{config.model_name}.pt')
     print('Model saved.')
 
 

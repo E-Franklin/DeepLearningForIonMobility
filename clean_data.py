@@ -1,47 +1,7 @@
 import pandas as pd
 import re
-import math
-from pandas import DataFrame
-from scipy import constants
 
-
-def k0_to_ccs(df: DataFrame):
-    # constants
-    n0 = constants.value(
-        u'Loschmidt constant (273.15 K, 101.325 kPa)')  # Loschmidt's number
-    kB = constants.value(u'Boltzmann constant')  # JK-1
-    uamu = constants.value(u'unified atomic mass unit')  # 1/12 12C in kg
-    e = constants.value(
-        u'elementary charge')  # elementary charge C = A*s (Ampere*second)
-    t = 305  # K
-    # t0 = 273.15  # K
-    # p = 2.7  # mbar, 0.002664692820133235 atm
-    # p0 = 1013.25  # mbar, 1 atm
-    mg = 28  # mass of N2 in Da
-
-    ccs_values = []
-
-    for j in range(len(df)):
-        # calculate the CCS from 1/k0
-        mi = df.loc[j, 'Mass']
-        mu_kg = ((mi * mg) / (mi + mg)) * uamu  # convert Da to kg
-        term2 = math.sqrt((2 * constants.pi) / (mu_kg * kB * t))
-
-        q = df.loc[j, 'PrecursorCharge']
-        term3 = (q * e) / (
-                (1 / df.loc[j, 'PrecursorIonMobility'] * 10 ** -4) * n0)
-
-        ccs = (3 / 16) * term2 * term3 * 10 ** 20  # 10**20 converts m**2 to Angstrom
-        print(ccs)
-        # print(data.loc[i, 'CCS'])
-
-        ccs_values.append(ccs)
-
-    return ccs_values
-
-def ccs_to_k0(df: Dataframe):
-
-
+from DataUtils import k0_to_ccs, ccs_to_k0
 
 data_set_lengths = {}
 
@@ -55,17 +15,31 @@ lab_data = pd.read_csv(
 lab_data = lab_data[lab_data['Decoy'] == 0]
 lab_data = lab_data.reset_index(drop=True)
 
-# calculate the mass and add it as a column
-lab_data['Mass'] = lab_data.loc[:, 'PrecursorMz'] * lab_data.loc[:, 'PrecursorCharge']
+# replace the modifications with the single letters that are used to represent them
+lab_data['ModifiedPeptideSequence'] = lab_data[
+    'ModifiedPeptideSequence'].str.replace(r'\.\(UniMod:1\)', 'a',
+                                           regex=True)
+lab_data['ModifiedPeptideSequence'] = lab_data[
+    'ModifiedPeptideSequence'].str.replace(r'C\(UniMod:4\)', 'c',
+                                           regex=True)
+lab_data['ModifiedPeptideSequence'] = lab_data[
+    'ModifiedPeptideSequence'].str.replace(r'M\(UniMod:35\)', 'm',
+                                           regex=True)
+
+lab_data.to_csv('data_sets\\lab_data_no_decoy.tsv', sep='\t',
+                index=False)
 
 # calculate the ccs values and add them to the data frame
-ccs_val = k0_to_ccs(lab_data)
+ccs_val = k0_to_ccs(lab_data.loc[:, 'PrecursorMz'].values,
+                    lab_data.loc[:, 'PrecursorCharge'].values,
+                    lab_data.loc[:, 'PrecursorIonMobility'].values)
 lab_data['CCS'] = ccs_val
 
 # select relevant columns and rename them
-lab_data = lab_data.loc[:,
-                        ['PrecursorCharge', 'NormalizedRetentionTime', 'PeptideSequence',
-                         'ModifiedPeptideSequence', 'PrecursorIonMobility', 'CCS']]
+lab_data = lab_data.loc[:, ['PrecursorCharge', 'NormalizedRetentionTime',
+                            'PeptideSequence',
+                            'ModifiedPeptideSequence', 'PrecursorIonMobility',
+                            'CCS']]
 
 lab_data.rename(
     columns={'PrecursorCharge': 'charge', 'NormalizedRetentionTime': 'RT',
@@ -117,7 +91,8 @@ data_set_lengths['lab_data_deeprt'] = len(deep_rt_lab_set)
 # Prepare the data for IM prediction
 # ------------------------------------
 
-im_pred_set_wc = lab_data.loc[:, ['base_sequence', 'sequence', 'charge', 'IM', 'CCS']]
+im_pred_set_wc = lab_data.loc[:,
+                 ['base_sequence', 'sequence', 'charge', 'IM', 'CCS']]
 # make unique on modified sequence
 im_pred_set_wc.drop_duplicates(subset=['sequence', 'charge'], keep='first',
                                inplace=True)
@@ -129,7 +104,8 @@ im_pred_set_wc.to_csv('data_sets\\lab_data_im_wc_ccs.tsv', sep='\t',
 data_set_lengths['lab_data_im_wc'] = len(im_pred_set_wc)
 
 # data set for learning im without charge
-im_pred_set_nc = lab_data.loc[:, ['base_sequence', 'sequence', 'charge', 'IM', 'CCS']]
+im_pred_set_nc = lab_data.loc[:,
+                 ['base_sequence', 'sequence', 'charge', 'IM', 'CCS']]
 im_pred_set_nc = im_pred_set_nc.sort_values('charge')
 # make unique on modified sequence
 im_pred_set_nc.drop_duplicates(subset=['sequence'], keep='first', inplace=True)

@@ -8,7 +8,9 @@ from sklearn.preprocessing import MinMaxScaler
 import wandb
 from SeqToIntTransform import *
 from SequenceDataset import *
-from path_config import data_dir
+import math
+from pandas import DataFrame
+from scipy import constants
 
 
 def delta_t95(act, pred):
@@ -80,16 +82,15 @@ def get_vocab():
 
 
 def load_file(filename):
+    data_frame = pd.read_csv(filename, sep='\t')
+
     if wandb.config.use_charge:
-        data_frame = pd.read_csv(filename, sep='\t')[
-            ['sequence', 'charge', wandb.config.target]]
-        data_set = SequenceChargeDataset(data_frame, wandb.config.target,
-                                         transform=ChargeSeqToInt(get_vocab()))
+        transform = ChargeSeqToInt(get_vocab())
     else:
-        data_frame = pd.read_csv(filename, sep='\t')[
-            ['sequence', wandb.config.target]]
-        data_set = SequenceDataset(data_frame, wandb.config.target,
-                                   transform=SeqToInt(get_vocab()))
+        transform = SeqToInt(get_vocab())
+
+    data_set = SequenceDataset(data_frame, wandb.config.target,
+                               transform)
 
     return data_set
 
@@ -125,3 +126,89 @@ def load_test_data(collate_fn, scaler):
                                               shuffle=False,
                                               drop_last=True)
     return test_loader
+
+
+def load_pred_data(collate_fn, data_file):
+    data_frame = pd.read_csv(data_file)
+
+    if wandb.config.use_charge:
+        transform = ChargeSeqToInt(get_vocab())
+    else:
+        transform = SeqToInt(get_vocab())
+
+    data_set = SequencePredDataset(data_frame, transform)
+    print(data_set.get_max_length())
+
+    if wandb.config.max_length < data_set.get_max_length():
+        wandb.config.update({'max_length': data_set.get_max_length()},
+                            allow_val_change=True)
+
+    pred_loader = torch.utils.data.DataLoader(dataset=data_set,
+                                              batch_size=wandb.config.batch_size,
+                                              collate_fn=collate_fn,
+                                              shuffle=False,
+                                              drop_last=True)
+    return data_frame, pred_loader
+
+
+def k0_to_ccs(mz, charge, im):
+    # constants
+    n0 = constants.value(
+        u'Loschmidt constant (273.15 K, 101.325 kPa)')  # Loschmidt's number
+    kb = constants.value(u'Boltzmann constant')  # JK-1
+    uamu = constants.value(u'unified atomic mass unit')  # 1/12 12C in kg
+    # elementary charge C = A*s (Ampere*second)
+    e = constants.value(u'elementary charge')
+    t = 305  # K
+    # t0 = 273.15  # K
+    # p = 2.7  # mbar, 0.002664692820133235 atm
+    # p0 = 1013.25  # mbar, 1 atm
+    mg = 28  # mass of N2 in Da
+
+    # calculate the CCS from 1/k0
+    mi = mz * charge
+    mu_kg = ((mi * mg) / (mi + mg)) * uamu  # convert Da to kg
+    term2 = np.sqrt((2 * constants.pi) / (mu_kg * kb * t))
+
+    k0 = 1 / im
+    # 10 ** -4 convert cm**2 to m**2
+    term3 = (charge * e) / ((k0 * 10 ** -4) * n0)
+
+    ccs = (3 / 16) * term2 * term3 * 10 ** 20  # 10**20 converts m**2 to Angstrom
+    print(ccs)
+    # print(data.loc[i, 'CCS'])
+
+    return ccs
+
+
+def ccs_to_k0(mz, charge, ccs):
+    # constants
+    n0 = constants.value(
+        u'Loschmidt constant (273.15 K, 101.325 kPa)')  # Loschmidt's number
+    kb = constants.value(u'Boltzmann constant')  # J*K-1
+    uamu = constants.value(u'unified atomic mass unit')  # 1/12 12C in kg
+    # elementary charge C = A*s (Ampere*second)
+    e = constants.value(u'elementary charge')
+    t = 305  # K
+    # t0 = 273.15  # K
+    # p = 2.7  # mbar, 0.002664692820133235 atm
+    # p0 = 1013.25  # mbar, 1 atm
+    mg = 28  # mass of N2 in Da
+
+    # calculate the CCS from 1/k0
+    mi = mz * charge
+    mu_kg = ((mi * mg) / (mi + mg)) * uamu  # convert Da to kg
+    term2 = np.sqrt((2 * constants.pi) / (mu_kg * kb * t))
+
+    # 10**20 converts Angstrom to m**2
+    term3 = (charge * e) / ((ccs * 10 ** 20) * n0)
+
+    k0 = (3 / 16) * term2 * term3 * 10 ** -4
+    print(1/k0)
+    # print(data.loc[i, 'CCS'])
+
+    return 1/k0
+
+
+
+

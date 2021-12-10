@@ -13,12 +13,14 @@ default_config = {
     'device': device,
     # 'embedding_dim': 120,
     'output_size': 1,
-    # The value used by Meier et al is 64 and by DeepRT is 16
-    'batch_size': 16,
     'num_epochs': 20,
     'learning_rate': 0.001,
     'dropout': 0,
-    'data_dir': 'data_sets\\'
+    'data_dir': 'data_sets\\',
+    'training_data': 'data_sets\\lab_data_im_wc_ccs_train.tsv',
+    'testing_data': 'data_sets\\lab_data_im_wc_ccs_val.tsv',
+    'output_dir': 'output_data\\',
+    'config_file': 'LSTM_configA.yaml'
 }
 
 '''
