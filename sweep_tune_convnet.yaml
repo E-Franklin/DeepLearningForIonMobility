@@ -1,0 +1,22 @@
+program: sweep_conv_train.py
+method: grid
+metric:
+  name: delta_t95
+  goal: minimize
+parameters:
+  learning_rate:
+    values: [0.002, 0.001, 0.0005]
+  batch_size:
+    value: 4
+  num_epochs:
+    value: 4
+  kernel:
+    values: [7, 8, 9, 10, 11]
+  target:
+    value: 'IM'
+  target_unit:
+    value: '1/K0'
+command:
+  - C:\Users\spicy\.virtualenvs\DeepLearningForIonMobility-XwJxUx0e\Scripts\python.exe
+  - ${program}
+  - ${args}

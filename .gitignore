@@ -1,0 +1,21 @@
+# data files
+data_sets/
+output_data/
+
+# plots. These are logged to wandb so they stay organized
+plots/
+
+# wandb run info
+wandb/
+
+*pipfile*
+*example*
+
+*pycache*
+._*
+.idea*
+.tmp*
+*config*
+*.pdf
+code_snippet_testing.py
+*.pt
