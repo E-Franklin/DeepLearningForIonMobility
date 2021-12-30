@@ -11,11 +11,11 @@ class SeqToInt:
         self.vocab = vocab
 
     def __call__(self, sample):
-        seq, target, length = sample['sequence'], sample['target'], sample['length']
 
-        seq = [self.vocab[char] for char in seq]
+        seq = [self.vocab[char] for char in sample['sequence']]
+        sample['sequence'] = seq
 
-        return {'sequence': seq, 'target': target, 'length': length}
+        return sample
 
 
 class ChargeSeqToInt:

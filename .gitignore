@@ -1,9 +1,11 @@
 # data files
 data_sets/
 output_data/
+test_pipeline/
 
 # plots. These are logged to wandb so they stay organized
 plots/
+*.png
 
 # wandb run info
 wandb/

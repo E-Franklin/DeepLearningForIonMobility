@@ -6,23 +6,23 @@ from torch.nn import TransformerEncoder, TransformerEncoderLayer
 
 
 class SequenceTransformer(nn.Module):
-    def __init__(self, vocab, embed_size, nhead, dim_ff, num_layers, use_charge, dropout=0):
+    def __init__(self, vocab, embedding_dim, nhead, dim_ff, num_layers, use_charge, dropout=0):
         super(SequenceTransformer, self).__init__()
 
         self.use_charge = use_charge
 
-        self.encoder = nn.Embedding(num_embeddings=(len(vocab)), embedding_dim=embed_size,
+        self.encoder = nn.Embedding(num_embeddings=(len(vocab)), embedding_dim=embedding_dim,
                                     padding_idx=vocab['-'])
-        self.pos_encoder = PositionalEncoding(embed_size, dropout)
-        encoder_layers = TransformerEncoderLayer(d_model=embed_size, nhead=nhead, dim_feedforward=dim_ff,
+        self.pos_encoder = PositionalEncoding(embedding_dim, dropout)
+        encoder_layers = TransformerEncoderLayer(d_model=embedding_dim, nhead=nhead, dim_feedforward=dim_ff,
                                                  dropout=dropout, batch_first=True)
         self.transformer_encoder = TransformerEncoder(encoder_layers, num_layers)
-        self.d_model = embed_size
+        self.d_model = embedding_dim
 
         if use_charge:
-            self.decoder1 = nn.Linear(embed_size + 1, 60)
+            self.decoder1 = nn.Linear(embedding_dim + 1, 60)
         else:
-            self.decoder1 = nn.Linear(embed_size, 60)
+            self.decoder1 = nn.Linear(embedding_dim, 60)
 
         self.decoder2 = nn.Linear(60, 1)
 
