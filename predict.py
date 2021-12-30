@@ -20,11 +20,9 @@ def predict_values(data_file, model_path, scaler_path,
     ccs_to_k0)
     :return: None
     """
-    device = torch.device('cpu')
 
-    # load the yaml file and get a python dictionary
-    #with open(config_file, 'r') as file:
-    #    config = yaml.safe_load(file)
+    # create a data loader for the data file
+    data_frame, data_loader = load_pred_data(pred_collate, data_file)
 
     # build the model
     model = build_model(wandb.config)
@@ -35,18 +33,14 @@ def predict_values(data_file, model_path, scaler_path,
         # load the scaler
         scaler = load(open('scaler.pkl', 'rb'))
 
-    # set the model to eval mode
-    model.eval()
-
-    # create a data loader for the data file
-    data_frame, data_loader = load_pred_data(pred_collate, data_file)
-
     # predict the ouput values
     preds_list = []
 
+    # set the model to eval mode
+    model.eval()
     with torch.no_grad():
         for i, (seqs, charges, lengths) in enumerate(data_loader):
-            seqs = seqs.to(device).long()
+            seqs = seqs.to(wandb.config.device).long()
             charges = charges.to(wandb.config.device)
 
             # predict outputs
@@ -59,7 +53,8 @@ def predict_values(data_file, model_path, scaler_path,
             if scaler_path:
                 outputs = scaler.inverse_transform(outputs)
 
-            preds_list.extend(outputs.squeeze().tolist())
+            preds_list.append(outputs.squeeze())
+            #preds_list.extend(outputs.squeeze().tolist())
 
 
     # write the original data out to a file with a column for the new values
@@ -71,4 +66,8 @@ def predict_values(data_file, model_path, scaler_path,
     else:
         data_frame[wandb.config.target] = preds_list
 
-    data_frame.to_csv(f'{output_dir}/prediction_ouput.csv', index=False)
+    data_frame.to_csv(f'{output_dir}/'
+                      f'{wandb.config.model_type}_prediction_output'
+                      f'.tsv',
+                      sep='\t',
+                      index=False)

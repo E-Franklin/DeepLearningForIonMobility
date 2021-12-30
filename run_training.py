@@ -65,10 +65,14 @@ def main() -> None:
     wandb.config.update({'device': device})
 
     print(wandb.config)
-    
-    print(f"Start training at {datetime.now()}")
+
+    start = datetime.now()
+    print(f"Start training at {start}")
+
     train_model()
-    print(f"Training completed at {datetime.now()}")
+
+    complete = datetime.now()
+    print(f"Training completed at {complete} in {complete-start}")
 
     run.finish()
 

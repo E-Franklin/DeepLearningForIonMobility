@@ -6,16 +6,20 @@ from encoding import onehot_encoding
 
 
 # Recurrent neural network (many-to-one)
-class LSTMOnehot(nn.Module):
+class LSTM(nn.Module):
     def __init__(self, embedding_dim, num_lstm_units, num_layers, vocab,
                  bidirectional, use_charge, dropout=0, output_size=1):
-        super(LSTMOnehot, self).__init__()
+        super(LSTM, self).__init__()
         self.vocab = vocab
         self.embedding_dim = embedding_dim
         self.num_lstm_units = num_lstm_units
         self.num_layers = num_layers
         self.bidirectional = bidirectional
         self.use_charge = use_charge
+
+        self.encoder = nn.Embedding(num_embeddings=(len(vocab)),
+                                    embedding_dim=embedding_dim,
+                                    padding_idx=vocab['-'])
 
         self.lstm = nn.LSTM(input_size=embedding_dim,
                             hidden_size=num_lstm_units, num_layers=num_layers,
@@ -35,7 +39,7 @@ class LSTMOnehot(nn.Module):
 
     def forward(self, x, charges, x_lengths):
         # x will have padded sequences
-        x = onehot_encoding(x, self.embedding_dim)
+        x = self.encoder(x)
 
         # Dim transformation: (batch_size, seq_len, embedding_dim) ->
         # (batch_size, seq_len, num_lstm_units)

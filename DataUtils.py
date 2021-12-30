@@ -1,3 +1,4 @@
+import sys
 from statistics import median
 
 import numpy as np
@@ -68,6 +69,7 @@ def get_vocab():
         # append the charge and add it to the list. charges range from 1 to 5
         # TODO: build the vocabulary from the data
         for a in aas:
+            # supports charge 1-5
             for i in range(1, 6):
                 if a + str(i) not in aa_charge:
                     aa_charge.append(a + str(i))
@@ -77,7 +79,7 @@ def get_vocab():
         aas += aa_charge[0]
         vocab = dict((a, i) for i, a in enumerate(aas))
 
-    wandb.config.embedding_dim = len(vocab)
+    # wandb.config.embedding_dim = len(vocab)
     return vocab
 
 
@@ -98,7 +100,6 @@ def load_file(filename):
 def load_training_data(collate_fn):
     file = wandb.config.training_data
     data_set = load_file(file)
-    wandb.config.max_length = data_set.get_max_length()
 
     scaler = MinMaxScaler(feature_range=(0, 1))
     data_set.scale_targets(scaler)
@@ -114,11 +115,7 @@ def load_training_data(collate_fn):
 def load_test_data(collate_fn, scaler):
     file = wandb.config.testing_data
     data_set = load_file(file)
-    print(data_set.get_max_length())
     data_set.scale_targets(scaler)
-    if wandb.config.max_length < data_set.get_max_length():
-        wandb.config.update({'max_length': data_set.get_max_length()},
-                            allow_val_change=True)
 
     test_loader = torch.utils.data.DataLoader(dataset=data_set,
                                               batch_size=wandb.config.batch_size,
@@ -129,7 +126,7 @@ def load_test_data(collate_fn, scaler):
 
 
 def load_pred_data(collate_fn, data_file):
-    data_frame = pd.read_csv(data_file)
+    data_frame = pd.read_csv(data_file, sep='\t')
 
     if wandb.config.use_charge:
         transform = ChargeSeqToInt(get_vocab())
@@ -137,21 +134,23 @@ def load_pred_data(collate_fn, data_file):
         transform = SeqToInt(get_vocab())
 
     data_set = SequencePredDataset(data_frame, transform)
-    print(data_set.get_max_length())
-
-    if wandb.config.max_length < data_set.get_max_length():
-        wandb.config.update({'max_length': data_set.get_max_length()},
-                            allow_val_change=True)
 
     pred_loader = torch.utils.data.DataLoader(dataset=data_set,
-                                              batch_size=wandb.config.batch_size,
+                                              batch_size=1,
                                               collate_fn=collate_fn,
                                               shuffle=False,
-                                              drop_last=True)
+                                              drop_last=False)
     return data_frame, pred_loader
 
 
 def k0_to_ccs(mz, charge, im):
+    """
+    Convert from 1/k0 to CCS
+    :param mz: mass to charge ratio for each peptide
+    :param charge: charge for each peptide
+    :param im: the ion mobility value 1/k0 for each peptide
+    :return:
+    """
     # constants
     n0 = constants.value(
         u'Loschmidt constant (273.15 K, 101.325 kPa)')  # Loschmidt's number
@@ -160,9 +159,6 @@ def k0_to_ccs(mz, charge, im):
     # elementary charge C = A*s (Ampere*second)
     e = constants.value(u'elementary charge')
     t = 305  # K
-    # t0 = 273.15  # K
-    # p = 2.7  # mbar, 0.002664692820133235 atm
-    # p0 = 1013.25  # mbar, 1 atm
     mg = 28  # mass of N2 in Da
 
     # calculate the CCS from 1/k0
@@ -174,14 +170,21 @@ def k0_to_ccs(mz, charge, im):
     # 10 ** -4 convert cm**2 to m**2
     term3 = (charge * e) / ((k0 * 10 ** -4) * n0)
 
-    ccs = (3 / 16) * term2 * term3 * 10 ** 20  # 10**20 converts m**2 to Angstrom
-    print(ccs)
-    # print(data.loc[i, 'CCS'])
+    # 10**20 converts m**2 to Angstrom
+    ccs = (3 / 16) * term2 * term3 * 10 ** 20
 
     return ccs
 
 
 def ccs_to_k0(mz, charge, ccs):
+    """
+    Convert from CCS to 1/k0
+    :param mz: mass to charge ratio for each peptide
+    :param charge: charge for each peptide
+    :param ccs: ccs value for each peptide
+    :return: 1/k0
+    """
+
     # constants
     n0 = constants.value(
         u'Loschmidt constant (273.15 K, 101.325 kPa)')  # Loschmidt's number
@@ -190,9 +193,6 @@ def ccs_to_k0(mz, charge, ccs):
     # elementary charge C = A*s (Ampere*second)
     e = constants.value(u'elementary charge')
     t = 305  # K
-    # t0 = 273.15  # K
-    # p = 2.7  # mbar, 0.002664692820133235 atm
-    # p0 = 1013.25  # mbar, 1 atm
     mg = 28  # mass of N2 in Da
 
     # calculate the CCS from 1/k0
@@ -201,14 +201,9 @@ def ccs_to_k0(mz, charge, ccs):
     term2 = np.sqrt((2 * constants.pi) / (mu_kg * kb * t))
 
     # 10**20 converts Angstrom to m**2
-    term3 = (charge * e) / ((ccs * 10 ** 20) * n0)
+    m2 = np.divide(ccs, (10 ** 20))
+    term3 = (charge * e) / (m2 * n0)
 
-    k0 = (3 / 16) * term2 * term3 * 10 ** -4
-    print(1/k0)
-    # print(data.loc[i, 'CCS'])
+    k0 = (3 / 16) * term2 * term3 / 10 ** -4
 
-    return 1/k0
-
-
-
-
+    return 1 / k0

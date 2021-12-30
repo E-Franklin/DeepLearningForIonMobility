@@ -70,15 +70,6 @@ def run_and_log_stats(targets_list, preds_list, data_set, plot_eval, model_name,
 
     if plot_eval:
 
-        # create a file to store the targets and predictions
-        filename = f'{wandb.config.output_dir}output_data/' \
-                   f'{model_name}_validation_tar_pred.csv'
-        exists = Path(filename).exists()
-        if exists:
-            raise RuntimeError('File ' + filename + ' already exists')
-
-        df.to_csv(filename, index=False)
-
         residuals = df['Actual'] - df['Pred']
         df['colour'] = ['outlier' if abs(resid) > delta_95 else 'point' for
                         resid in residuals]
@@ -112,7 +103,7 @@ def run_and_log_stats(targets_list, preds_list, data_set, plot_eval, model_name,
             )
         )
 
-        wandb.log({'Act vs Pred plot': fig})
+        wandb.log({f'Act vs Pred plot {data_set}': fig})
 
     print(
         f'{data_set} Evaluation complete. Delta_t95: {delta_95}, Med Rel Err:'
@@ -133,6 +124,19 @@ def evaluate_model(model, model_name, data_loader, config, data_set,
         model.load_state_dict(torch.load(wandb.config.model))
 
     targets_list, preds_list = evaluate(model, config, data_loader, scaler)
+
+    df = pd.DataFrame({'Actual': targets_list, 'Pred': preds_list},
+                      columns=['Actual', 'Pred'])
+    # create a file to store the targets and predictions
+    filename = f'{wandb.config.output_dir}output_data/' \
+               f'{model_name}_validation_tar_pred.csv'
+    if plot_eval:
+        exists = Path(filename).exists()
+        if exists:
+            raise RuntimeError('File ' + filename + ' already exists')
+        else:
+            df.to_csv(filename, index=False)
+
     med_err = run_and_log_stats(targets_list, preds_list, data_set, plot_eval,
                                 model_name, config)
 

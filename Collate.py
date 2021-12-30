@@ -21,7 +21,7 @@ def pad_sort_collate(batch):
         batch_charges = [-1 for _ in range(len(batch))]
 
     # pad the sequences
-    if wandb.config.model_type == 'Conv':
+    if wandb.config.model_type == 'CNN':
         # use the max_length for the data set rather than the batch
         max_length = wandb.config.max_length
     else:
@@ -63,7 +63,7 @@ def pred_collate(batch):
         batch_charges = [-1 for _ in range(len(batch))]
 
     # pad the sequences
-    if wandb.config.model_type == 'Conv':
+    if wandb.config.model_type == 'CNN':
         # use the max_length for the data set rather than the batch
         max_length = wandb.config.max_length
     else:
@@ -79,9 +79,5 @@ def pred_collate(batch):
     batch_charges = torch.tensor(batch_charges)
     batch_charges = batch_charges[:, None]
     batch_lengths = torch.tensor(lens)
-
-    # sort the sequences in the batch from longest to shortest
-    batch_lengths, perm_idx = batch_lengths.sort(0, descending=True)
-    padded_seqs = padded_seqs[perm_idx]
 
     return padded_seqs, batch_charges, batch_lengths

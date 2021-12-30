@@ -4,9 +4,9 @@ from torch.optim.lr_scheduler import StepLR, ReduceLROnPlateau
 
 import wandb
 from Collate import pad_sort_collate
-from ConvNet import ConvNet
+from CNN import CNN
 from DataUtils import load_training_data, get_vocab, load_test_data
-from LSTM_Models import LSTMOnehot
+from LSTM_Models import LSTM
 from evaluate import evaluate_model
 from transformer import SequenceTransformer
 
@@ -25,7 +25,7 @@ def train_model():
     loss_fn = nn.MSELoss()
     optimizer = torch.optim.Adam(model.parameters(), lr=config.learning_rate)
 
-    # divide the learning rate by 10 the learning rate every 5 epochs
+    # schedulers to adjust the learning rate
     s1_scheduler = StepLR(optimizer, step_size=1, gamma=0.1, verbose=True)
     plat_scheduler = ReduceLROnPlateau(optimizer, mode='min', factor=0.1,
                                        patience=1, threshold=0.0001,
@@ -39,6 +39,7 @@ def train_model():
         evaluate_model(model, config.model_name, val_loader, config,
                        'validation', scaler)
         if epoch == 0:
+            # reduce LR after the first round of training
             s1_scheduler.step()
         else:
             plat_scheduler.step(med_error)
@@ -55,14 +56,14 @@ def build_model(config):
     # Define the model
     if config.model_type == 'LSTM':
         print('Building LSTM model')
-        model = LSTMOnehot(config.embedding_dim, config.num_lstm_units,
-                           config.num_layers, get_vocab(),
-                           config.bidirectional, config.use_charge,
-                           config.dropout).to(config.device)
-    elif config.model_type == 'Conv':
+        model = LSTM(config.embedding_dim, config.num_lstm_units,
+                     config.num_layers, get_vocab(),
+                     config.bidirectional, config.use_charge,
+                     config.dropout).to(config.device)
+    elif config.model_type == 'CNN':
         print('Building convolutional model')
-        model = ConvNet(config.kernel, config.use_charge,
-                        embedding_dim=config.embedding_dim).to(config.device)
+        model = CNN(config.kernel, config.use_charge, get_vocab(),
+                    embedding_dim=config.embedding_dim).to(config.device)
     elif config.model_type == 'Transformer':
         print('Building Transformer model')
         model = SequenceTransformer(get_vocab(), config.embedding_dim,

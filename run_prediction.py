@@ -1,7 +1,10 @@
 import argparse
 from pathlib import Path
 
+import torch
+
 import wandb
+from DataUtils import k0_to_ccs, ccs_to_k0
 
 from predict import predict_values
 
@@ -26,12 +29,13 @@ def init_argparse() -> argparse.ArgumentParser:
                              'constructing the model to load.')
     parser.add_argument('output_dir',
                         help='The directory where the output will be written.')
-    parser.add.argument('--scaler',
+    parser.add_argument('--scaler',
                         help='The path to the scaler pkl file that was used '
                              'during training.')
-    parser.add.argument('--transform',
+    parser.add_argument('--transform',
                         help='The function to use to transform the predicted '
-                             'values.')
+                             'values. Either k0_t0_ccs or ccs_to_k0',
+                        choices=[ccs_to_k0, k0_to_ccs])
 
     return parser
 
@@ -47,6 +51,15 @@ def main() -> None:
     run = wandb.init(project="DeepLearningForIonMobility",
                      config=args.config_file,
                      reinit=True)
+
+    # Check if CUDA is available on the system and use it if so.
+    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+    wandb.config.update({'device': device})
+
+    if args.transform == 'k0_to_ccs':
+        args.transform = k0_to_ccs
+    elif args.transform == 'ccs_to_k0':
+        args.transform = ccs_to_k0
 
     predict_values(args.data_file, args.model_path, args.scaler,
                    args.output_dir, args.transform)
