@@ -6,6 +6,7 @@ import torch
 import wandb
 from train import train_model
 from pathlib import Path
+import json
 
 
 def init_argparse() -> argparse.ArgumentParser:
@@ -27,7 +28,8 @@ def init_argparse() -> argparse.ArgumentParser:
     parser.add_argument('output_dir',
                         help='The directory where the output will be written.')
     parser.add_argument('config_file',
-                        help='A .yaml containing the parameters for training.')
+                        help='A .yaml or .json file containing the parameters '
+                             'for training.')
     parser.add_argument('--model_name',
                         help='The filename to use for saving the model.',
                         default=f"model_{datetime.now().strftime('%Y-%m-%d_%H-%M')}")
@@ -38,6 +40,12 @@ def init_argparse() -> argparse.ArgumentParser:
 def main() -> None:
     parser = init_argparse()
     args = parser.parse_args()
+
+    # if the config is a json file, extract the dictionary
+    file_extension = Path(args.config_file).suffix
+    if file_extension == '.json':
+        with open(args.config_file) as json_file:
+            args.config_file = json.load(json_file)
 
     # make necessary output directories if they don't exist
     model_path = Path(f'{args.output_dir}/models').resolve()

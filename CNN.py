@@ -1,7 +1,6 @@
-import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from encoding import onehot_encoding
+
 import wandb
 
 
@@ -44,10 +43,6 @@ class CNN(nn.Module):
         # flatten the output from the CNN
         x = x.view(-1, 256 * 1 * self.out_size)
 
-        #if self.use_charge:
-        #    x = torch.cat([x, charges], dim=1)
-        #    x = self.fc_charge(x)
-        #else:
         x = self.fc(x)
 
         x = F.relu(self.fc2(x))

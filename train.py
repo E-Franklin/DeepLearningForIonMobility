@@ -72,7 +72,10 @@ def build_model(config):
                                     dropout=config.dropout).to(config.device)
     else:
         print('Unsupported model type')
-        model = None
+        return None
+
+    wandb.log({'Trainable paramters':
+              sum(p.numel() for p in model.parameters() if p.requires_grad)})
 
     return model
 
